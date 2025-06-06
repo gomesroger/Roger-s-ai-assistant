@@ -464,6 +464,18 @@
             color: #2d5a2d;
             margin-top: 10px;
         }
+
+        /* Creator Signature Styles */
+        .creator-signature {
+            font-size: 10px;
+            color: #888;
+            text-align: center;
+            padding: 10px;
+            border-top: 1px solid #e0e0e0;
+            background: white;
+            border-radius: 0 0 20px 20px; /* Match bottom container radius */
+            margin-top: auto; /* Pushes it to the bottom of the flex container */
+        }
     </style>
 </head>
 <body>
@@ -543,6 +555,9 @@
             </div>
             <p id="ratingThankYou" class="rating-thank-you hidden"></p>
         </div>
+
+        <!-- Custom Signature -->
+        <div class="creator-signature" id="creatorSignature"></div>
     </div>
 
     <script>
@@ -570,7 +585,7 @@
             messageLabel, submitBtn, closeNotice, chatTitleElement, chatSubtitleElement,
             profilePicImg, avatarFallback, languageToggleButton, generateDraftButton,
             generateDraftButtonText, chatRatingContainer, ratingPrompt, starRatingContainer, ratingThankYou,
-            closeNoticeText;
+            closeNoticeText, creatorSignatureElement;
 
 
         // --- Localization Data ---
@@ -611,7 +626,8 @@
                 watchVideo: "Certainly! Here's Roger's video for recruiters: <a href='https://vimeo.com/1090730386/4c50b956d0' target='_blank' rel='noopener noreferrer' class='video-link'>From Paper to Person</a>",
                 linkedinMessage: "Great! Here's a link to Roger's LinkedIn profile: <a href='https://www.linkedin.com/in/meetrogergomes' target='_blank' rel='noopener noreferrer' class='linkedin-link'>linkedin.com/in/meetrogergomes</a>",
                 openCalendlyButton: "Open Roger's Calendar",
-                exitButton: "Exit" // Added exit button text
+                exitButton: "Exit", // Added exit button text
+                creatorSignaturePrefix: "Created by" // Added localized prefix
             },
             ja: {
                 welcome: "👋 こんにちは！私はロジャーのAIアシスタントです。ロジャーとつながるお手伝いをします。",
@@ -644,10 +660,12 @@
                 draftGenerated: "下書きを生成しました！",
                 rateExperience: "体験はいかがでしたか？",
                 thankYouForFeedback: "フィードバックありがとうございます！",
-                watchVideo: "はい、承知いたしました。採用担当者向けのロジャーのビデオはこちらです：<a href='https://vimeo.com/1090731598/b065f49f38' target='_blank' rel='noopener noreferrer' class='video-link'>書類の先にある人物像</a>",
+                // MODIFIED: Changed Japanese video message as per request
+                watchVideo: "はい、承知いたしました。採用担当者向けのロジャーのビデオはこちらです：<a href='https://vimeo.com/1090731598/b065f49f38' target='_blank' rel='noopener noreferrer' class='video-link'>簡単なご挨拶</a>",
                 linkedinMessage: "はい、承知いたしました。ロジャーのLinkedInプロフィールはこちらです：<a href='https://www.linkedin.com/in/meetrogergomes' target='_blank' rel='noopener noreferrer' class='linkedin-link'>linkedin.com/in/meetrogergomes</a>",
                 openCalendlyButton: "ロジャーのカレンダーを開く",
-                exitButton: "終了" // Added exit button text
+                exitButton: "終了", // Added exit button text
+                creatorSignaturePrefix: "作成者：" // Added localized prefix
             }
         };
 
@@ -721,6 +739,7 @@
             starRatingContainer = document.getElementById('starRating');
             ratingThankYou = document.getElementById('ratingThankYou');
             closeNoticeText = document.getElementById('closeNoticeText');
+            creatorSignatureElement = document.getElementById('creatorSignature'); // Cache the signature element
         }
 
         /**
@@ -915,6 +934,7 @@
             const isExitIntent = exitKeywords.some(keyword => lowerMessage.includes(keyword));
 
             if (isExitIntent || lowerMessage === quickRepliesData[lang].start[5].toLowerCase() || lowerMessage === quickRepliesData[lang].purpose[5].toLowerCase()) {
+                console.log("Exit intent detected. Initiating exit flow."); // Debug log
                 await addBotMessage(messages[lang].goodbye);
                 await delay(2000); // Give user time to read goodbye
                 showRatingPrompt(); // Transition to rating (which then closes/resets)
@@ -1125,6 +1145,7 @@
             const isExitIntent = exitKeywords.some(keyword => lowerMessage.includes(keyword));
 
             if (isExitIntent || lowerMessage === quickRepliesData[lang].purpose[5].toLowerCase()) {
+                console.log("Exit intent detected from purpose selection. Initiating exit flow."); // Debug log
                 await addBotMessage(messages[lang].goodbye);
                 await delay(2000);
                 showRatingPrompt();
@@ -1518,6 +1539,8 @@
             updateFormLabels();
             ratingPrompt.textContent = messages[currentLanguage].rateExperience;
             ratingThankYou.textContent = messages[currentLanguage].thankYouForFeedback;
+            // Update creator signature
+            creatorSignatureElement.textContent = messages[currentLanguage].creatorSignaturePrefix + " Roger Gomes";
         }
 
         /**
@@ -1561,7 +1584,6 @@
 
                 setTimeout(async () => {
                     chatRatingContainer.classList.add('hidden');
-                    // Removed addBotMessage(messages[currentLanguage].goodbye); here
                     // The goodbye message is now handled when the Exit intent is detected
                     await delay(3000);
                     disableInput();
