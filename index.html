@@ -65,7 +65,7 @@
             height: 100%;
             border-radius: 50%;
             object-fit: cover;
-            object-position: 50% 0%; /* Adjusted to show the top part (face) of the avatar */
+            object-position: 50% 5%; /* Adjusted to show the top part (face) of the avatar better */
         }
         .profile-pic .avatar-fallback {
             width: 100%;
@@ -527,7 +527,7 @@
             <div class="chat-title">Roger's AI Assistant</div> <!-- Will be updated by JS -->
             <div class="chat-subtitle">ロジャーのAIアシスタント</div> <!-- Will be updated by JS -->
             <!-- NEW: Welcome Video Player -->
-            <video id="welcomeVideoPlayer" class="welcome-video-overlay" autoplay muted playsinline></video>
+            <video id="welcomeVideoPlayer" class="welcome-video-overlay" autoplay muted playsinline preload="auto"></video>
         </div>
         <div class="chat-messages" id="chatMessages" role="log" aria-live="polite">
             <!-- Messages will be populated here by JavaScript -->
@@ -858,21 +858,36 @@
             }
 
             const videoSrc = messages[currentLanguage].welcomeVideo;
+            console.log(`playWelcomeVideo: Current language is ${currentLanguage}, video source is ${videoSrc}`);
+
 
             // Ensure video element is clean before new load and hide header elements
             welcomeVideoPlayer.classList.remove('visible');
             chatHeaderElement.classList.add('video-active'); // Hide static header elements
             welcomeVideoPlayer.src = ''; // Clear source to stop current playback if any
-            welcomeVideoPlayer.load(); // Unload previous source
+            welcomeVideoPlayer.load(); // Unload previous source (important for changing video source)
 
             if (videoSrc) {
                 welcomeVideoPlayer.src = videoSrc;
-                welcomeVideoPlayer.load(); // Load the new source
+                welcomeVideoPlayer.load(); // Load the new source for playback
+
+                // Listen for any errors during video loading/playback
+                welcomeVideoPlayer.onerror = (e) => {
+                    console.error("Video error occurred:", e);
+                    console.log(`Video state: src=${welcomeVideoPlayer.src}, error=${welcomeVideoPlayer.error ? welcomeVideoPlayer.error.message : 'none'}`);
+                    welcomeVideoPlayer.classList.remove('visible');
+                    chatHeaderElement.classList.remove('video-active');
+                    startTextIntroduction(); // Fallback to text on error
+                };
+
 
                 // Event listener for when video can play without interruption
                 welcomeVideoPlayer.oncanplaythrough = () => {
+                    console.log(`Video canplaythrough for: ${welcomeVideoPlayer.src}`);
                     welcomeVideoPlayer.classList.add('visible'); // Make video visible
-                    welcomeVideoPlayer.play().catch(error => {
+                    welcomeVideoPlayer.play().then(() => {
+                        console.log(`Video started playing: ${welcomeVideoPlayer.src}`);
+                    }).catch(error => {
                         console.warn("Video autoplay prevented:", error);
                         // Autoplay failed, immediately hide video and transition to text introduction
                         welcomeVideoPlayer.classList.remove('visible');
@@ -883,21 +898,23 @@
 
                 // Event listener for when the video finishes playing
                 welcomeVideoPlayer.onended = () => {
+                    console.log(`Video ended: ${welcomeVideoPlayer.src}`);
                     welcomeVideoPlayer.classList.remove('visible'); // Hide video after it ends
                     chatHeaderElement.classList.remove('video-active'); // Show static header elements
                     startTextIntroduction(); // Proceed with chat introduction messages
                 };
 
                 // Fallback for cases where 'canplaythrough' might not fire or is delayed
+                // Or if the video doesn't play for some reason even after load.
+                // This timer acts as a safety net.
                 setTimeout(() => {
-                    if (!welcomeVideoPlayer.classList.contains('visible') && !welcomeVideoPlayer.ended) {
-                        console.warn("Video did not start playing as expected, proceeding with text introduction.");
+                    if (!welcomeVideoPlayer.classList.contains('visible') && !welcomeVideoPlayer.ended && !welcomeVideoPlayer.paused) {
+                        console.warn("Video did not start playing as expected within timeout, or was still attempting. Proceeding with text introduction.");
                         welcomeVideoPlayer.classList.remove('visible');
                         chatHeaderElement.classList.remove('video-active'); // Show static header elements
                         startTextIntroduction();
                     }
-                }, 3000); // Give it a few seconds to try playing
-
+                }, 4000); // Increased timeout slightly to give video more time
             } else {
                 console.log("No welcome video specified for current language. Proceeding with text introduction.");
                 chatHeaderElement.classList.remove('video-active'); // Ensure header is visible if no video path
@@ -909,6 +926,7 @@
          * Initiates the text-based welcome messages after video playback.
          */
         function startTextIntroduction() {
+            console.log("startTextIntroduction called.");
             setTimeout(async () => {
                 await addBotMessage(messages[currentLanguage].welcome);
                 setTimeout(async () => {
