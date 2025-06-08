@@ -43,11 +43,12 @@
             padding: 20px;
             text-align: center;
             border-radius: 20px 20px 0 0;
-            position: relative; /* For language toggle positioning */
+            position: relative; /* For language toggle positioning and video overlay */
         }
+        /* Adjusted profile-pic size for better visibility of avatar */
         .profile-pic {
-            width: 60px;
-            height: 60px;
+            width: 80px; /* Increased size */
+            height: 80px; /* Increased size */
             border-radius: 50%;
             margin: 0 auto 10px;
             border: 3px solid white;
@@ -56,12 +57,15 @@
             align-items: center;
             justify-content: center;
             overflow: hidden;
+            /* Added transition for smoother appearance/disappearance */
+            transition: opacity 0.3s ease-in-out;
         }
         .profile-pic img {
             width: 100%;
             height: 100%;
             border-radius: 50%;
             object-fit: cover;
+            object-position: 50% 0%; /* Adjusted to show the top part (face) of the avatar */
         }
         .profile-pic .avatar-fallback {
             width: 100%;
@@ -79,11 +83,44 @@
             font-size: 18px;
             font-weight: 600;
             margin-bottom: 5px;
+            /* Added transition for smoother appearance/disappearance */
+            transition: opacity 0.3s ease-in-out;
         }
         .chat-subtitle {
             font-size: 12px;
             opacity: 0.9;
+            /* Added transition for smoother appearance/disappearance */
+            transition: opacity 0.3s ease-in-out;
         }
+
+        /* NEW: Video Overlay Styling */
+        .welcome-video-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover; /* Ensures the video covers the entire header area while maintaining aspect ratio */
+            border-radius: 20px 20px 0 0; /* Match header border-radius */
+            z-index: 7; /* Higher z-index to be above profile pic and text, but below language toggle */
+            opacity: 0; /* Start hidden */
+            transition: opacity 0.5s ease-in-out; /* Smooth fade in/out */
+            pointer-events: none; /* Allows clicks to pass through to elements behind when hidden */
+        }
+
+        .welcome-video-overlay.visible {
+            opacity: 1; /* Fade in when visible */
+            pointer-events: auto; /* Enable pointer events when visible */
+        }
+
+        /* NEW: Styling to hide header elements when video is playing */
+        .chat-header.video-active .profile-pic,
+        .chat-header.video-active .chat-title,
+        .chat-header.video-active .chat-subtitle {
+            opacity: 0;
+            pointer-events: none; /* Disable interaction */
+        }
+
 
         /* Chat Messages Area */
         .chat-messages {
@@ -489,6 +526,8 @@
             </div>
             <div class="chat-title">Roger's AI Assistant</div> <!-- Will be updated by JS -->
             <div class="chat-subtitle">ロジャーのAIアシスタント</div> <!-- Will be updated by JS -->
+            <!-- NEW: Welcome Video Player -->
+            <video id="welcomeVideoPlayer" class="welcome-video-overlay" autoplay muted playsinline></video>
         </div>
         <div class="chat-messages" id="chatMessages" role="log" aria-live="polite">
             <!-- Messages will be populated here by JavaScript -->
@@ -585,7 +624,7 @@
             messageLabel, submitBtn, closeNotice, chatTitleElement, chatSubtitleElement,
             profilePicImg, avatarFallback, languageToggleButton, generateDraftButton,
             generateDraftButtonText, chatRatingContainer, ratingPrompt, starRatingContainer, ratingThankYou,
-            closeNoticeText, creatorSignatureElement;
+            closeNoticeText, creatorSignatureElement, welcomeVideoPlayer, chatHeaderElement;
 
 
         // --- Localization Data ---
@@ -607,10 +646,8 @@
                 windowClosing: "This window will close automatically in 3 seconds...",
                 messagePrompt: "I'd be happy to help you send a message to Roger. Please fill out the form below:",
                 goodbye: "Thank you for your time! Feel free to reach out anytime.",
-                // UPDATED: Clarified schedule still working message
                 scheduleStillWorking: "No problem! Please let me know if you are 'done' or are 'still working on it' when you are ready to proceed.",
-                scheduleHelp: "I'm sorry, I didn't understand. Please let me know if you are 'done' or are 'still working on it'.", // UPDATED: More direct re-prompt
-                // MODIFIED: Updated general fallback message
+                scheduleHelp: "I'm sorry, I didn't understand. Please let me know if you are 'done' or are 'still working on it'.",
                 generalFallback: "I'm sorry, I didn't quite understand what you meant. If you're having trouble typing, you can always choose an option from the buttons below.",
                 formSending: "Sending...",
                 formSent: "Message sent successfully! This window will close in 3 seconds...",
@@ -627,13 +664,14 @@
                 watchVideo: "Certainly! Here's Roger's video for recruiters: <a href='https://vimeo.com/1090730386/4c50b956d0' target='_blank' rel='noopener noreferrer' class='video-link'>From Paper to Person</a>",
                 linkedinMessage: "Great! Here's a link to Roger's LinkedIn profile: <a href='https://www.linkedin.com/in/meetrogergomes' target='_blank' rel='noopener noreferrer' class='linkedin-link'>linkedin.com/in/meetrogergomes</a>",
                 openCalendlyButton: "Open Roger's Calendar",
-                exitButton: "Exit", // Added exit button text
-                creatorSignaturePrefix: "Created by" // Added localized prefix
+                exitButton: "Exit",
+                creatorSignaturePrefix: "Created by",
+                welcomeVideo: 'https://gomesroger.github.io/roger-ai-assets/Ai%20Assistant%20Video-%20ENG.webm'
             },
             ja: {
                 welcome: "👋 こんにちは！私はロジャーのAIアシスタントです。ロジャーとつながるお手伝いをします。",
                 intro: "以下のことをお手伝いできます：\n• ロジャーとのカジュアルチャットのスケジュール調整\n• ロジャーへのメッセージのお預かり\n• ロジャーより歓迎の言葉\n• ロジャーのビデオを見る\n• LinkedInでつながる",
-                askName: "素晴らしい！始めましょう。お名前を教えてください。",
+                askName: "まず、お名前を教えてください。",
                 askCompany: "{name}さん、はじめまして！どちらの会社にお勤めですか？",
                 askPurpose: "{name}さん、ありがとうございます！本日はどのようなご用件でしょうか？",
                 rogerMessage: "こんにちは！ご連絡いただきありがとうございます。\n\n常に新しいご縁やチャレンジにワクワクしています。具体的なポジションのご相談はもちろん、「どんな形で力になれるか話してみたい」というカジュアルなご連絡も大歓迎です。\n\nご一緒に新しい可能性を探っていけたら嬉しいです！\n– ロジャー",
@@ -645,10 +683,8 @@
                 windowClosing: "このウィンドウは3秒後に自動的に閉じます...",
                 messagePrompt: "ロジャーにメッセージをお送りするお手伝いをいたします。以下のフォームにご記入ください：",
                 goodbye: "お時間をいただき、ありがとうございました！いつでもお気軽にご連絡ください。",
-                // UPDATED: Clarified schedule still working message
                 scheduleStillWorking: "問題ありません！「完了しました」または「まだ作業中です」のどちらかでお知らせください。",
-                scheduleHelp: "申し訳ありません、理解できませんでした。「完了しました」または「まだ作業中です」のどちらかでお知らせください。", // UPDATED: More direct re-prompt
-                // MODIFIED: Updated general fallback message
+                scheduleHelp: "申し訳ありません、理解できませんでした。「完了しました」または「まだ作業中です」のどちらかでお知らせください。",
                 generalFallback: "申し訳ありません、おっしゃっている意味がよく分かりませんでした。もし入力でお困りでしたら、下のボタンからオプションを選んでください。",
                 formSending: "送信中...",
                 formSent: "メッセージが正常に送信されました！このウィンドウは3秒後に閉じます...",
@@ -662,26 +698,26 @@
                 draftGenerated: "下書きを生成しました！",
                 rateExperience: "体験はいかがでしたか？",
                 thankYouForFeedback: "フィードバックありがとうございます！",
-                // MODIFIED: Changed Japanese video message as per request
                 watchVideo: "はい、承知いたしました。採用担当者向けのロジャーのビデオはこちらです：<a href='https://vimeo.com/1090731598/b065f49f38' target='_blank' rel='noopener noreferrer' class='video-link'>簡単なご挨拶</a>",
                 linkedinMessage: "はい、承知いたしました。ロジャーのLinkedInプロフィールはこちらです：<a href='https://www.linkedin.com/in/meetrogergomes' target='_blank' rel='noopener noreferrer' class='linkedin-link'>linkedin.com/in/meetrogergomes</a>",
                 openCalendlyButton: "ロジャーのカレンダーを開く",
-                exitButton: "終了", // Added exit button text
-                creatorSignaturePrefix: "作成者：" // Added localized prefix
+                exitButton: "終了",
+                creatorSignaturePrefix: "作成者：",
+                welcomeVideo: 'https://gomesroger.github.io/roger-ai-assets/Ai%20Assistant%20Video-%20JAP.webm'
             }
         };
 
         // Quick replies data for different conversation stages and languages.
         const quickRepliesData = {
             en: {
-                start: ["Schedule a chat", "Leave a message", "Hear a greeting from Roger", "Watch Roger's Video", "Connect on LinkedIn", "Exit"], // Added Exit
-                purpose: ["Schedule a chat", "Leave a message", "Roger's greetings", "Watch Roger's Video", "Connect on LinkedIn", "Exit"], // Added Exit
+                start: ["Schedule a chat", "Leave a message", "Hear a greeting from Roger", "Watch Roger's Video", "Connect on LinkedIn", "Exit"],
+                purpose: ["Schedule a chat", "Leave a message", "Roger's greetings", "Watch Roger's Video", "Connect on LinkedIn", "Exit"],
                 scheduleConfirm: ["Yes, I'm done", "Still working on it"],
                 openCalendly: ["Open Roger's Calendar"]
             },
             ja: {
-                start: ["チャットを予約", "メッセージを残す", "ロジャーより歓迎の言葉", "ロジャーのビデオを見る", "LinkedInでつながる", "終了"], // Added 終了
-                purpose: ["チャットを予約", "メッセージを残す", "ロジャーのごあいさつ", "ロジャーのビデオを見る", "LinkedInでつながる", "終了"], // Added 終了
+                start: ["チャットを予約", "メッセージを残す", "ロジャーより歓迎の言葉", "ロジャーのビデオを見る", "LinkedInでつながる", "終了"],
+                purpose: ["チャットを予約", "メッセージを残す", "ロジャーのごあいさつ", "ロジャーのビデオを見る", "LinkedInでつながる", "終了"],
                 scheduleConfirm: ["はい、完了しました", "まだ作業中です"],
                 openCalendly: ["ロジャーのカレンダーを開く"]
             }
@@ -741,7 +777,9 @@
             starRatingContainer = document.getElementById('starRating');
             ratingThankYou = document.getElementById('ratingThankYou');
             closeNoticeText = document.getElementById('closeNoticeText');
-            creatorSignatureElement = document.getElementById('creatorSignature'); // Cache the signature element
+            creatorSignatureElement = document.getElementById('creatorSignature');
+            welcomeVideoPlayer = document.getElementById('welcomeVideoPlayer');
+            chatHeaderElement = document.querySelector('.chat-header');
         }
 
         /**
@@ -801,15 +839,85 @@
             chatRatingContainer.classList.add('hidden');
             resetStars();
 
+            // Ensure chat-header starts without video-active class
+            chatHeaderElement.classList.remove('video-active');
+
+            // Play the welcome video first
+            playWelcomeVideo();
+        }
+
+        /**
+         * Plays the welcome video based on the current language.
+         * Transitions to text introduction after video ends or fails to autoplay.
+         */
+        function playWelcomeVideo() {
+            if (!welcomeVideoPlayer) {
+                console.error("Welcome video player element not found.");
+                startTextIntroduction(); // Fallback to text if video player isn't there
+                return;
+            }
+
+            const videoSrc = messages[currentLanguage].welcomeVideo;
+
+            // Ensure video element is clean before new load and hide header elements
+            welcomeVideoPlayer.classList.remove('visible');
+            chatHeaderElement.classList.add('video-active'); // Hide static header elements
+            welcomeVideoPlayer.src = ''; // Clear source to stop current playback if any
+            welcomeVideoPlayer.load(); // Unload previous source
+
+            if (videoSrc) {
+                welcomeVideoPlayer.src = videoSrc;
+                welcomeVideoPlayer.load(); // Load the new source
+
+                // Event listener for when video can play without interruption
+                welcomeVideoPlayer.oncanplaythrough = () => {
+                    welcomeVideoPlayer.classList.add('visible'); // Make video visible
+                    welcomeVideoPlayer.play().catch(error => {
+                        console.warn("Video autoplay prevented:", error);
+                        // Autoplay failed, immediately hide video and transition to text introduction
+                        welcomeVideoPlayer.classList.remove('visible');
+                        chatHeaderElement.classList.remove('video-active'); // Show static header elements
+                        startTextIntroduction();
+                    });
+                };
+
+                // Event listener for when the video finishes playing
+                welcomeVideoPlayer.onended = () => {
+                    welcomeVideoPlayer.classList.remove('visible'); // Hide video after it ends
+                    chatHeaderElement.classList.remove('video-active'); // Show static header elements
+                    startTextIntroduction(); // Proceed with chat introduction messages
+                };
+
+                // Fallback for cases where 'canplaythrough' might not fire or is delayed
+                setTimeout(() => {
+                    if (!welcomeVideoPlayer.classList.contains('visible') && !welcomeVideoPlayer.ended) {
+                        console.warn("Video did not start playing as expected, proceeding with text introduction.");
+                        welcomeVideoPlayer.classList.remove('visible');
+                        chatHeaderElement.classList.remove('video-active'); // Show static header elements
+                        startTextIntroduction();
+                    }
+                }, 3000); // Give it a few seconds to try playing
+
+            } else {
+                console.log("No welcome video specified for current language. Proceeding with text introduction.");
+                chatHeaderElement.classList.remove('video-active'); // Ensure header is visible if no video path
+                startTextIntroduction(); // If no video path, just proceed with text introduction
+            }
+        }
+
+        /**
+         * Initiates the text-based welcome messages after video playback.
+         */
+        function startTextIntroduction() {
             setTimeout(async () => {
                 await addBotMessage(messages[currentLanguage].welcome);
                 setTimeout(async () => {
                     await addBotMessage(messages[currentLanguage].intro);
-                    // Now directly show the "purpose" quick replies as "start" has been modified
-                    showQuickReplies('start'); // 'start' now contains the relevant direct actions
+                    showQuickReplies('start');
                 }, 1500);
-            }, 1000);
+            }, 1000); // Small delay before text starts appearing
         }
+
 
         /**
          * Appends a message to the chat display.
@@ -1442,7 +1550,7 @@
                 if (activeReplySetType === 'openCalendly' && lowerReplyText.includes(messages[lang].openCalendlyButton.toLowerCase().split(" ")[0])) {
                     window.open('https://calendly.com/gomes-roger333', '_blank');
 
-                    // Reset direct scheduling flags immediately after opening Calendly from a quick reply
+                    // Reset direct scheduling flags immediately after opening Calendly
                     isSchedulingDirectly = false;
                     directScheduleSubStep = 0;
 
@@ -1525,7 +1633,7 @@
             console.log("toggleLanguage called. Current language:", currentLanguage);
             currentLanguage = (currentLanguage === 'en') ? 'ja' : 'en';
             updateUIForLanguage();
-            startConversation();
+            startConversation(); // Restart conversation to play new video
             console.log("Language toggled to:", currentLanguage);
         }
 
