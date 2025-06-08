@@ -16,24 +16,80 @@
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
             display: flex;
+            flex-direction: column;
             justify-content: center;
             align-items: center;
             padding: 20px;
+        }
+
+        /* Language Selection Screen Styling */
+        .language-selection-screen {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh; /* Take full viewport height */
+            width: 100%;
+            max-width: 450px;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            animation: slideUp 0.6s ease-out;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .language-selection-screen h1 {
+            font-size: 1.8em;
+            color: #333;
+            margin-bottom: 30px;
+            font-weight: 600;
+        }
+
+        .language-button {
+            padding: 15px 30px;
+            margin: 10px 0;
+            width: 80%; /* Make buttons take more width */
+            max-width: 250px; /* Limit max width */
+            border: none;
+            border-radius: 25px;
+            font-size: 1.1em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .language-button.english {
+            background: linear-gradient(45deg, #4CAF50, #8BC34A);
+            color: white;
+        }
+
+        .language-button.japanese {
+            background: linear-gradient(45deg, #FFC107, #FF9800);
+            color: white;
+        }
+
+        .language-button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.2);
         }
 
         /* Chat Container Styling */
         .chat-container {
             max-width: 450px;
             width: 100%;
-            min-height: 600px; /* Changed from height to min-height */
+            min-height: 600px;
             background: rgba(255, 255, 255, 0.95);
             backdrop-filter: blur(10px);
             border-radius: 20px;
             box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
             display: flex;
             flex-direction: column;
-            overflow: hidden; /* This hides content that overflows the main container */
-            animation: slideUp 0.6s ease-out;
+            overflow: hidden;
+            margin-bottom: 40px;
+            display: none; /* Initially hidden */
         }
 
         /* Chat Header Styling */
@@ -43,12 +99,11 @@
             padding: 20px;
             text-align: center;
             border-radius: 20px 20px 0 0;
-            position: relative; /* For language toggle positioning and video overlay */
+            position: relative;
         }
-        /* Adjusted profile-pic size for better visibility of avatar */
         .profile-pic {
-            width: 80px; /* Increased size */
-            height: 80px; /* Increased size */
+            width: 80px;
+            height: 80px;
             border-radius: 50%;
             margin: 0 auto 10px;
             border: 3px solid white;
@@ -57,7 +112,6 @@
             align-items: center;
             justify-content: center;
             overflow: hidden;
-            /* Added transition for smoother appearance/disappearance */
             transition: opacity 0.3s ease-in-out;
         }
         .profile-pic img {
@@ -65,7 +119,7 @@
             height: 100%;
             border-radius: 50%;
             object-fit: cover;
-            object-position: 50% 15%; /* Adjusted to show the face of the avatar better */
+            object-position: 50% 10%; /* Adjusted to show the face even better */
         }
         .profile-pic .avatar-fallback {
             width: 100%;
@@ -83,42 +137,40 @@
             font-size: 18px;
             font-weight: 600;
             margin-bottom: 5px;
-            /* Added transition for smoother appearance/disappearance */
             transition: opacity 0.3s ease-in-out;
         }
         .chat-subtitle {
             font-size: 12px;
             opacity: 0.9;
-            /* Added transition for smoother appearance/disappearance */
             transition: opacity 0.3s ease-in-out;
         }
 
-        /* NEW: Video Overlay Styling */
+        /* Video Overlay Styling */
         .welcome-video-overlay {
             position: absolute;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            object-fit: cover; /* Ensures the video covers the entire header area while maintaining aspect ratio */
-            border-radius: 20px 20px 0 0; /* Match header border-radius */
-            z-index: 7; /* Higher z-index to be above profile pic and text, but below language toggle */
-            opacity: 0; /* Start hidden */
-            transition: opacity 0.5s ease-in-out; /* Smooth fade in/out */
-            pointer-events: none; /* Allows clicks to pass through to elements behind when hidden */
+            object-fit: cover;
+            border-radius: 20px 20px 0 0;
+            z-index: 7;
+            opacity: 0;
+            transition: opacity 0.5s ease-in-out;
+            pointer-events: none;
         }
 
         .welcome-video-overlay.visible {
-            opacity: 1; /* Fade in when visible */
-            pointer-events: auto; /* Enable pointer events when visible */
+            opacity: 1;
+            pointer-events: auto;
         }
 
-        /* NEW: Styling to hide header elements when video is playing */
+        /* Styling to hide header elements when video is playing */
         .chat-header.video-active .profile-pic,
         .chat-header.video-active .chat-title,
         .chat-header.video-active .chat-subtitle {
             opacity: 0;
-            pointer-events: none; /* Disable interaction */
+            pointer-events: none;
         }
 
 
@@ -126,7 +178,7 @@
         .chat-messages {
             flex: 1;
             padding: 20px;
-            overflow-y: auto; /* Allows scrolling for chat messages */
+            overflow-y: auto;
             display: flex;
             flex-direction: column;
             gap: 15px;
@@ -191,7 +243,7 @@
         .chat-input-wrapper {
             display: flex;
             gap: 10px;
-            align-items: flex-end; /* Aligns textarea and button nicely if textarea grows */
+            align-items: flex-end;
         }
         .chat-input {
             flex: 1;
@@ -200,11 +252,11 @@
             border-radius: 20px;
             font-size: 14px;
             resize: none;
-            max-height: 100px; /* Max height before scrolling */
-            min-height: 40px; /* Consistent initial height with button */
-            line-height: 1.4; /* Improved text readability */
+            max-height: 100px;
+            min-height: 40px;
+            line-height: 1.4;
             font-family: inherit;
-            transition: border-color 0.2s ease-in-out; /* Smooth focus transition */
+            transition: border-color 0.2s ease-in-out;
         }
         .chat-input:focus {
             outline: none;
@@ -230,7 +282,7 @@
             opacity: 0.5;
             cursor: not-allowed;
             transform: none;
-            background: #ccc; /* Clearer disabled state */
+            background: #ccc;
         }
 
         /* Quick Replies */
@@ -257,12 +309,12 @@
 
         /* Message Form Styles */
         .message-form {
-            flex: 1; /* Allow form to take available space */
+            flex: 1;
             padding: 20px;
             background: white;
-            border-radius: 0 0 20px 20px; /* Match chat container */
+            border-radius: 0 0 20px 20px;
             border-top: 1px solid #e0e0e0;
-            overflow-y: auto; /* Allows scrolling within the form itself */
+            overflow-y: auto;
         }
         .form-group {
             margin-bottom: 15px;
@@ -315,7 +367,7 @@
             opacity: 0.6;
             cursor: not-allowed;
             transform: none;
-            background: #ccc; /* Clearer disabled state */
+            background: #ccc;
         }
         .generate-draft-btn {
             flex: 1;
@@ -341,7 +393,7 @@
             opacity: 0.6;
             cursor: not-allowed;
             transform: none;
-            background: #ccc; /* Clearer disabled state */
+            background: #ccc;
             color: #666;
             border-color: #999;
         }
@@ -383,20 +435,20 @@
 
         /* Scrollbar Styling */
         .chat-messages::-webkit-scrollbar,
-        .message-form::-webkit-scrollbar { /* Added scrollbar for message-form */
+        .message-form::-webkit-scrollbar {
             width: 4px;
         }
         .chat-messages::-webkit-scrollbar-track,
-        .message-form::-webkit-scrollbar-track { /* Added scrollbar track for message-form */
+        .message-form::-webkit-scrollbar-track {
             background: transparent;
         }
         .chat-messages::-webkit-scrollbar-thumb,
-        .message-form::-webkit-scrollbar-thumb { /* Added scrollbar thumb for message-form */
+        .message-form::-webkit-scrollbar-thumb {
             background: #ccc;
             border-radius: 2px;
         }
 
-        /* Language Toggle Button */
+        /* Language Toggle Button (inside chat, now hidden by default) */
         .language-toggle {
             position: absolute;
             top: 10px;
@@ -408,7 +460,8 @@
             border-radius: 15px;
             font-size: 12px;
             cursor: pointer;
-            z-index: 10; /* Ensure it's above other header content */
+            z-index: 10;
+            display: none; /* Hide this button as initial language choice is handled by other buttons */
         }
 
         /* Message Timestamp */
@@ -416,10 +469,10 @@
             font-size: 10px;
             opacity: 0.7;
             margin-top: 4px;
-            text-align: right; /* Align time to the right of the message bubble */
+            text-align: right;
         }
         .message.bot .message-time {
-            text-align: left; /* Align time to the left for bot messages */
+            text-align: left;
         }
 
         /* Close Notice (for form submission success) */
@@ -431,9 +484,9 @@
             margin-top: 10px;
             font-size: 12px;
             text-align: center;
-            display: flex; /* Use flexbox for alignment */
-            flex-direction: column; /* Stack content vertically */
-            gap: 10px; /* Space between elements */
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
         }
 
         .close-notice .email-content-display {
@@ -444,10 +497,10 @@
             text-align: left;
             font-family: monospace;
             font-size: 12px;
-            white-space: pre-wrap; /* Preserve whitespace and wrap text */
-            word-break: break-word; /* Break long words */
-            max-height: 150px; /* Limit height */
-            overflow-y: auto; /* Add scroll if content overflows */
+            white-space: pre-wrap;
+            word-break: break-word;
+            max-height: 150px;
+            overflow-y: auto;
         }
 
         .close-notice .copy-btn {
@@ -486,7 +539,7 @@
         .star {
             width: 30px;
             height: 30px;
-            color: #ccc; /* Default star color */
+            color: #ccc;
             cursor: pointer;
             transition: color 0.2s ease-in-out, transform 0.1s ease-out;
         }
@@ -494,7 +547,7 @@
             transform: scale(1.1);
         }
         .star.selected {
-            color: #FFD700; /* Gold color for selected stars */
+            color: #FFD700;
         }
         .rating-thank-you {
             font-size: 12px;
@@ -510,24 +563,27 @@
             padding: 10px;
             border-top: 1px solid #e0e0e0;
             background: white;
-            border-radius: 0 0 20px 20px; /* Match bottom container radius */
-            margin-top: auto; /* Pushes it to the bottom of the flex container */
+            border-radius: 0 0 20px 20px;
+            margin-top: auto;
         }
     </style>
 </head>
 <body>
-    <div class="chat-container">
+    <div class="language-selection-screen" id="languageSelectionScreen">
+        <h1>Select your language / 言語を選択してください</h1>
+        <button class="language-button english" data-lang="en">English</button>
+        <button class="language-button japanese" data-lang="ja">日本語</button>
+    </div>
+
+    <div class="chat-container" id="chatContainer">
         <div class="chat-header">
-            <button class="language-toggle">🌐 EN/日本語</button>
             <div class="profile-pic" id="profilePicContainer">
-                <!-- Profile picture updated to the new direct Imgur link -->
                 <img src="https://i.imgur.com/ThRrtS2.jpeg" alt="AI Assistant" onerror="this.style.display='none'; document.getElementById('avatarFallback').style.display='flex';">
                 <div class="avatar-fallback" id="avatarFallback" style="display: none;">🤖</div>
             </div>
-            <div class="chat-title">Roger's AI Assistant</div> <!-- Will be updated by JS -->
-            <div class="chat-subtitle">ロジャーのAIアシスタント</div> <!-- Will be updated by JS -->
-            <!-- NEW: Welcome Video Player -->
-            <video id="welcomeVideoPlayer" class="welcome-video-overlay" autoplay muted playsinline preload="auto"></video>
+            <div class="chat-title">Roger's AI Assistant</div>
+            <div class="chat-subtitle">ロジャーのAIアシスタント</div>
+            <video id="welcomeVideoPlayer" class="welcome-video-overlay" autoplay playsinline preload="auto"></video>
         </div>
         <div class="chat-messages" id="chatMessages" role="log" aria-live="polite">
             <!-- Messages will be populated here by JavaScript -->
@@ -550,7 +606,6 @@
                 </button>
             </div>
         </div>
-        <!-- Message Form -->
         <div class="message-form hidden" id="messageForm">
             <form>
                 <div class="form-group">
@@ -577,12 +632,9 @@
                 </div>
                 <div class="close-notice hidden" id="closeNotice">
                     <p id="closeNoticeText"></p>
-                    <!-- Removed email content display as it's no longer needed for direct sending -->
-                    <!-- Removed copy button as it's no longer needed for direct sending -->
                 </div>
             </form>
         </div>
-        <!-- Star Rating UI -->
         <div class="chat-rating-container hidden" id="chatRatingContainer">
             <p id="ratingPrompt" class="rating-prompt"></p>
             <div class="stars" id="starRating">
@@ -595,41 +647,35 @@
             <p id="ratingThankYou" class="rating-thank-you hidden"></p>
         </div>
 
-        <!-- Custom Signature -->
         <div class="creator-signature" id="creatorSignature"></div>
     </div>
 
+
     <script>
         // --- Global State Variables ---
-        let currentLanguage = 'en'; // Current language of the chat ('en' for English, 'ja' for Japanese)
-        let conversationStep = 0;   // Tracks the current step in the conversation flow
-        let userInfo = {};          // Stores user-provided information (name, company, etc.)
-        let isTyping = false;       // Flag to prevent multiple typing indicators
-        let waitingForScheduleConfirmation = false; // Flag for scheduling flow
-        let isSchedulingDirectly = false; // NEW FLAG: To indicate if the user chose direct scheduling
-        let directScheduleSubStep = 0; // 0: initial, 1: asked name, 2: asked company
-        let isLeavingMessageDirectly = false; // NEW FLAG: To indicate if the user chose direct message leaving
-        let directMessageSubStep = 0;  // 0: initial, 1: asked name, 2: asked company
+        let currentLanguage = 'en';
+        let conversationStep = 0;
+        let userInfo = {};
+        let isTyping = false;
+        let waitingForScheduleConfirmation = false;
+        let isSchedulingDirectly = false;
+        let directScheduleSubStep = 0;
+        let isLeavingMessageDirectly = false;
+        let directMessageSubStep = 0;
 
-        // --- IMPORTANT: Replace this with your deployed Google Apps Script Web App URL ---
-        // This URL is obtained after deploying your Google Apps Script (provided in the previous turn)
-        // as a web app. Example: 'https://script.google.com/macros/s/AKfycbXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX/exec'
         const GOOGLE_APPS_SCRIPT_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbygjlQiVtSYYoQtYOgXl2ES0iauRUsgsakygUYlbC1T1mzeeG54UnT0WD3dO6p2h9zDSg/exec';
 
         // --- Cached DOM Elements ---
-        // These variables will store references to frequently accessed HTML elements
-        // to avoid repeated DOM lookups, improving performance.
         let chatMessagesContainer, chatInput, sendButton, quickRepliesContainer,
             chatInputContainer, messageForm, nameLabel, companyLabel, emailLabel,
             messageLabel, submitBtn, closeNotice, chatTitleElement, chatSubtitleElement,
             profilePicImg, avatarFallback, languageToggleButton, generateDraftButton,
             generateDraftButtonText, chatRatingContainer, ratingPrompt, starRatingContainer, ratingThankYou,
-            closeNoticeText, creatorSignatureElement, welcomeVideoPlayer, chatHeaderElement;
+            closeNoticeText, creatorSignatureElement, welcomeVideoPlayer, chatHeaderElement,
+            languageSelectionScreen, englishButton, japaneseButton, chatContainer;
 
 
         // --- Localization Data ---
-        // Centralized object holding all text strings for different languages.
-        // This makes it easy to manage and switch between languages.
         const messages = {
             en: {
                 welcome: "👋 Hello! I'm Roger's AI assistant. I'm here to connect you with Roger.",
@@ -645,7 +691,7 @@
                 appointmentComplete: "Excellent! Roger will receive your booking confirmation and will be prepared for your meeting. Thank you for connecting with us!",
                 windowClosing: "This window will close automatically in 3 seconds...",
                 messagePrompt: "I'd be happy to help you send a message to Roger. Please fill out the form below:",
-                goodbye: "Thank you for your time! Feel free to reach out anytime.",
+                goodbye: "Thank Thank you for your time! Feel free to reach out anytime.",
                 scheduleStillWorking: "No problem! Please let me know if you are 'done' or are 'still working on it' when you are ready to proceed.",
                 scheduleHelp: "I'm sorry, I didn't understand. Please let me know if you are 'done' or are 'still working on it'.",
                 generalFallback: "I'm sorry, I didn't quite understand what you meant. If you're having trouble typing, you can always choose an option from the buttons below.",
@@ -666,7 +712,8 @@
                 openCalendlyButton: "Open Roger's Calendar",
                 exitButton: "Exit",
                 creatorSignaturePrefix: "Created by",
-                welcomeVideo: 'https://gomesroger.github.io/roger-ai-assets/Ai%20Assistant%20Video-%20ENG.webm'
+                welcomeVideo: 'https://gomesroger.github.io/roger-ai-assets/Ai%20Assistant%20Video-%20ENG.webm',
+                videoPlaybackError: "Video could not be played. Proceeding with text introduction."
             },
             ja: {
                 welcome: "👋 こんにちは！私はロジャーのAIアシスタントです。ロジャーとつながるお手伝いをします。",
@@ -703,11 +750,11 @@
                 openCalendlyButton: "ロジャーのカレンダーを開く",
                 exitButton: "終了",
                 creatorSignaturePrefix: "作成者：",
-                welcomeVideo: 'https://gomesroger.github.io/roger-ai-assets/Ai%20Assistant%20Video-%20JAP.webm'
+                welcomeVideo: 'https://gomesroger.github.io/roger-ai-assets/Ai%20Assistant%20Video-%20JPN.webm', // 日本語動画URLをJPN.webmに修正
+                videoPlaybackError: "動画を再生できませんでした。テキストでの導入に進みます。"
             }
         };
 
-        // Quick replies data for different conversation stages and languages.
         const quickRepliesData = {
             en: {
                 start: ["Schedule a chat", "Leave a message", "Hear a greeting from Roger", "Watch Roger's Video", "Connect on LinkedIn", "Exit"],
@@ -723,7 +770,6 @@
             }
         };
 
-        // Form label data for localization.
         const formLabelsData = {
             en: {
                 name: "Your Name:",
@@ -745,14 +791,20 @@
         document.addEventListener('DOMContentLoaded', function() {
             cacheDOMElements();
             initializeEventListeners();
-            updateUIForLanguage();
-            startConversation();
+            // Initially, only show the language selection screen
+            languageSelectionScreen.style.display = 'flex';
+            chatContainer.style.display = 'none'; // Ensure chat is hidden
         });
 
         /**
          * Caches references to frequently used DOM elements.
          */
         function cacheDOMElements() {
+            languageSelectionScreen = document.getElementById('languageSelectionScreen');
+            englishButton = document.querySelector('.language-button.english');
+            japaneseButton = document.querySelector('.language-button.japanese');
+            chatContainer = document.getElementById('chatContainer');
+
             chatMessagesContainer = document.getElementById('chatMessages');
             chatInput = document.getElementById('chatInput');
             sendButton = document.getElementById('sendBtn');
@@ -769,7 +821,6 @@
             chatSubtitleElement = document.querySelector('.chat-subtitle');
             profilePicImg = document.querySelector('.profile-pic img');
             avatarFallback = document.getElementById('avatarFallback');
-            languageToggleButton = document.querySelector('.language-toggle');
             generateDraftButton = document.getElementById('generateDraftBtn');
             generateDraftButtonText = document.getElementById('generateDraftBtnText');
             chatRatingContainer = document.getElementById('chatRatingContainer');
@@ -786,15 +837,29 @@
          * Initializes all necessary event listeners for interactive elements.
          */
         function initializeEventListeners() {
+            englishButton.addEventListener('click', () => selectLanguage('en'));
+            japaneseButton.addEventListener('click', () => selectLanguage('ja'));
+
             chatInput.addEventListener('input', autoResizeTextarea);
             chatInput.addEventListener('keydown', handleInputKeydown);
             sendButton.addEventListener('click', sendMessage);
-            languageToggleButton.addEventListener('click', toggleLanguage);
             document.querySelector('#messageForm form').addEventListener('submit', submitMessageForm);
             generateDraftButton.addEventListener('click', generateMessageDraft);
             starRatingContainer.addEventListener('click', handleStarRatingClick);
             starRatingContainer.addEventListener('mouseover', handleStarRatingHover);
             starRatingContainer.addEventListener('mouseout', handleStarRatingOut);
+        }
+
+        /**
+         * Handles language selection from the initial screen.
+         */
+        function selectLanguage(lang) {
+            console.log(`Language selected: ${lang}`);
+            currentLanguage = lang;
+            languageSelectionScreen.style.display = 'none';
+            chatContainer.style.display = 'flex'; // Show the chat container
+            updateUIForLanguage();
+            startConversation(); // Start the chat flow with the chosen language's video
         }
 
         /**
@@ -839,10 +904,9 @@
             chatRatingContainer.classList.add('hidden');
             resetStars();
 
-            // Ensure chat-header starts without video-active class
             chatHeaderElement.classList.remove('video-active');
 
-            // Play the welcome video first
+            // Play the welcome video first after language selection
             playWelcomeVideo();
         }
 
@@ -852,74 +916,73 @@
          */
         function playWelcomeVideo() {
             if (!welcomeVideoPlayer) {
-                console.error("Welcome video player element not found.");
-                startTextIntroduction(); // Fallback to text if video player isn't there
+                console.error("playWelcomeVideo: Welcome video player element not found. Skipping video playback.");
+                startTextIntroduction();
                 return;
             }
 
             const videoSrc = messages[currentLanguage].welcomeVideo;
-            console.log(`playWelcomeVideo: Current language is ${currentLanguage}, video source is ${videoSrc}`);
+            console.log(`playWelcomeVideo: Attempting to play video for language: ${currentLanguage}, source: ${videoSrc}`);
 
+            if (!videoSrc) {
+                console.warn(`playWelcomeVideo: No video source defined for language ${currentLanguage}. Proceeding with text introduction.`);
+                chatHeaderElement.classList.remove('video-active'); // Ensure header is visible
+                startTextIntroduction();
+                return;
+            }
 
-            // Ensure video element is clean before new load and hide header elements
+            // Reset video state for new playback attempt
             welcomeVideoPlayer.classList.remove('visible');
-            chatHeaderElement.classList.add('video-active'); // Hide static header elements
-            welcomeVideoPlayer.src = ''; // Clear source to stop current playback if any
-            welcomeVideoPlayer.load(); // Unload previous source (important for changing video source)
+            chatHeaderElement.classList.add('video-active'); // Hide static header elements while video attempts to play
+            welcomeVideoPlayer.src = videoSrc; // Set new video source
+            welcomeVideoPlayer.load(); // Load the new source
 
-            if (videoSrc) {
-                welcomeVideoPlayer.src = videoSrc;
-                welcomeVideoPlayer.load(); // Load the new source for playback
+            // Event listener for video errors
+            welcomeVideoPlayer.onerror = (e) => {
+                console.error("playWelcomeVideo: Video error occurred:", e);
+                console.log(`playWelcomeVideo: Video state on error: src=${welcomeVideoPlayer.src}, error.code=${welcomeVideoPlayer.error ? welcomeVideoPlayer.error.code : 'N/A'}, error.message=${welcomeVideoPlayer.error ? welcomeToPlayer.error.message : 'N/A'}`);
+                welcomeVideoPlayer.classList.remove('visible');
+                chatHeaderElement.classList.remove('video-active'); // Show static header elements on error
+                // Display user-friendly message in chat
+                addBotMessage(messages[currentLanguage].videoPlaybackError, false); // No typing effect for this instant message
+                startTextIntroduction(); // Fallback to text on error
+            };
 
-                // Listen for any errors during video loading/playback
-                welcomeVideoPlayer.onerror = (e) => {
-                    console.error("Video error occurred:", e);
-                    console.log(`Video state: src=${welcomeVideoPlayer.src}, error=${welcomeVideoPlayer.error ? welcomeVideoPlayer.error.message : 'none'}`);
+            // Event listener for when video can play without interruption
+            welcomeVideoPlayer.oncanplaythrough = () => {
+                console.log(`playWelcomeVideo: Video canplaythrough for: ${welcomeVideoPlayer.src}. Attempting to play.`);
+                welcomeVideoPlayer.classList.add('visible'); // Make video visible
+                welcomeVideoPlayer.play().then(() => {
+                    console.log(`playWelcomeVideo: Video started playing successfully: ${welcomeVideoPlayer.src}`);
+                }).catch(error => {
+                    console.warn("playWelcomeVideo: Video autoplay prevented (likely due to sound/browser policy):", error);
+                    welcomeVideoPlayer.classList.remove('visible');
+                    chatHeaderElement.classList.remove('video-active'); // Show static header elements if autoplay blocked
+                    // Display user-friendly message in chat
+                    addBotMessage(messages[currentLanguage].videoPlaybackError, false); // No typing effect for this instant message
+                    startTextIntroduction(); // Fallback to text if autoplay blocked
+                });
+            };
+
+            // Event listener for when the video finishes playing
+            welcomeVideoPlayer.onended = () => {
+                console.log(`playWelcomeVideo: Video ended: ${welcomeVideoPlayer.src}`);
+                welcomeVideoPlayer.classList.remove('visible'); // Hide video after it ends
+                chatHeaderElement.classList.remove('video-active'); // Show static header elements after video ends
+                startTextIntroduction(); // Proceed with chat introduction messages
+            };
+
+            // Safety net timeout in case 'oncanplaythrough' or 'play()' promise don't resolve as expected
+            setTimeout(() => {
+                if (!welcomeVideoPlayer.classList.contains('visible') && !welcomeVideoPlayer.ended && !welcomeVideoPlayer.paused) {
+                    console.warn("playWelcomeVideo: Video did not start playing as expected within timeout, or was still attempting. Proceeding with text introduction.");
                     welcomeVideoPlayer.classList.remove('visible');
                     chatHeaderElement.classList.remove('video-active');
-                    startTextIntroduction(); // Fallback to text on error
-                };
-
-
-                // Event listener for when video can play without interruption
-                welcomeVideoPlayer.oncanplaythrough = () => {
-                    console.log(`Video canplaythrough for: ${welcomeVideoPlayer.src}`);
-                    welcomeVideoPlayer.classList.add('visible'); // Make video visible
-                    welcomeVideoPlayer.play().then(() => {
-                        console.log(`Video started playing: ${welcomeVideoPlayer.src}`);
-                    }).catch(error => {
-                        console.warn("Video autoplay prevented:", error);
-                        // Autoplay failed, immediately hide video and transition to text introduction
-                        welcomeVideoPlayer.classList.remove('visible');
-                        chatHeaderElement.classList.remove('video-active'); // Show static header elements
-                        startTextIntroduction();
-                    });
-                };
-
-                // Event listener for when the video finishes playing
-                welcomeVideoPlayer.onended = () => {
-                    console.log(`Video ended: ${welcomeVideoPlayer.src}`);
-                    welcomeVideoPlayer.classList.remove('visible'); // Hide video after it ends
-                    chatHeaderElement.classList.remove('video-active'); // Show static header elements
-                    startTextIntroduction(); // Proceed with chat introduction messages
-                };
-
-                // Fallback for cases where 'canplaythrough' might not fire or is delayed
-                // Or if the video doesn't play for some reason even after load.
-                // This timer acts as a safety net.
-                setTimeout(() => {
-                    if (!welcomeVideoPlayer.classList.contains('visible') && !welcomeVideoPlayer.ended && !welcomeVideoPlayer.paused) {
-                        console.warn("Video did not start playing as expected within timeout, or was still attempting. Proceeding with text introduction.");
-                        welcomeVideoPlayer.classList.remove('visible');
-                        chatHeaderElement.classList.remove('video-active'); // Show static header elements
-                        startTextIntroduction();
-                    }
-                }, 4000); // Increased timeout slightly to give video more time
-            } else {
-                console.log("No welcome video specified for current language. Proceeding with text introduction.");
-                chatHeaderElement.classList.remove('video-active'); // Ensure header is visible if no video path
-                startTextIntroduction(); // If no video path, just proceed with text introduction
-            }
+                    // Display user-friendly message in chat
+                    addBotMessage(messages[currentLanguage].videoPlaybackError, false); // No typing effect for this instant message
+                    startTextIntroduction();
+                }
+            }, 4000); // Give the video 4 seconds to start
         }
 
         /**
@@ -933,9 +996,8 @@
                     await addBotMessage(messages[currentLanguage].intro);
                     showQuickReplies('start');
                 }, 1500);
-            }, 1000); // Small delay before text starts appearing
+            }, 1000);
         }
-
 
         /**
          * Appends a message to the chat display.
@@ -1018,7 +1080,6 @@
 
         /**
          * Initiates the direct scheduling flow.
-         * Sets flags and asks for the user's name if not already known.
          */
         async function initiateDirectScheduling() {
             console.log("initiateDirectScheduling called.");
@@ -1026,12 +1087,10 @@
             directScheduleSubStep = 1;
             await addBotMessage(messages[currentLanguage].askName);
             enableInput();
-            console.log("End of initiateDirectScheduling: isSchedulingDirectly =", isSchedulingDirectly, ", directScheduleSubStep =", directScheduleSubStep);
         }
 
         /**
          * Initiates the direct message leaving flow.
-         * Sets flags and asks for the user's name if not already known.
          */
         async function initiateDirectMessage() {
             console.log("initiateDirectMessage called.");
@@ -1039,7 +1098,6 @@
             directMessageSubStep = 1;
             await addBotMessage(messages[currentLanguage].askName);
             enableInput();
-            console.log("End of initiateDirectMessage: isLeavingMessageDirectly =", isLeavingMessageDirectly, ", directMessageSubStep =", directMessageSubStep);
         }
 
         /**
@@ -1047,68 +1105,52 @@
          */
         async function processUserMessage(message) {
             console.log("processUserMessage called. Current message:", message);
-            console.log("Before processing: conversationStep =", conversationStep, ", userInfo =", JSON.stringify(userInfo), ", isSchedulingDirectly =", isSchedulingDirectly, ", directScheduleSubStep =", directScheduleSubStep, ", isLeavingMessageDirectly =", isLeavingMessageDirectly, ", directMessageSubStep =", directMessageSubStep, ", waitingForScheduleConfirmation =", waitingForScheduleConfirmation);
-
             await delay(500);
 
             const lowerMessage = message.toLowerCase();
             const lang = currentLanguage;
 
-            // --- Priority 0: Handle Exit Intent ---
             const exitKeywords = [
-                messages[lang].exitButton.toLowerCase(), // "Exit" or "終了"
-                "quit", "end chat", "やめる", "会話を終了", "bye", "さようなら" // More keywords
+                messages[lang].exitButton.toLowerCase(),
+                "quit", "end chat", "やめる", "会話を終了", "bye", "さようなら"
             ];
             const isExitIntent = exitKeywords.some(keyword => lowerMessage.includes(keyword));
 
             if (isExitIntent || lowerMessage === quickRepliesData[lang].start[5].toLowerCase() || lowerMessage === quickRepliesData[lang].purpose[5].toLowerCase()) {
-                console.log("Exit intent detected. Initiating exit flow."); // Debug log
+                console.log("Exit intent detected. Initiating exit flow.");
                 await addBotMessage(messages[lang].goodbye);
-                await delay(2000); // Give user time to read goodbye
-                showRatingPrompt(); // Transition to rating (which then closes/resets)
-                enableInput(); // Keep input enabled for rating
-                conversationStep = 100; // Set a high step to prevent further processing
-                console.log("Handled Exit intent. State:", { conversationStep });
+                await delay(2000);
+                showRatingPrompt();
+                enableInput();
+                conversationStep = 100;
                 return;
             }
 
-
-            // --- Priority 1: Handle active direct scheduling flow ---
             if (isSchedulingDirectly) {
                 if (directScheduleSubStep === 1) {
                     userInfo.name = message;
-                    console.log("Name stored for direct scheduling: userInfo.name =", userInfo.name);
                     await addBotMessage(messages[lang].askCompany.replace('{name}', userInfo.name || (lang === 'en' ? 'there' : '皆様')));
                     directScheduleSubStep = 2;
                 } else if (directScheduleSubStep === 2) {
                     userInfo.company = message;
-                    console.log("Company stored for direct scheduling: userInfo.company =", userInfo.company);
-                    // Instead of opening Calendly directly, prompt user to click a button
                     await addBotMessage(messages[lang].scheduleDirectMessage.replace('{name}', userInfo.name || (lang === 'en' ? 'there' : '皆様')));
-                    showQuickReplies('openCalendly'); // Show the "Open Roger's Calendar" button
-                    // Do NOT reset isSchedulingDirectly or directScheduleSubStep yet
-                    // Wait for the user to click the "Open Roger's Calendar" button
-                    conversationStep = 99; // Set a high step to prevent general flow interference
+                    showQuickReplies('openCalendly');
+                    conversationStep = 99;
                 } else {
-                    console.warn("Unexpected sub-step in direct scheduling flow. Resetting.");
                     await addBotMessage(messages[lang].generalFallback);
                     startConversation();
                 }
                 enableInput();
-                console.log("Handled ongoing direct scheduling. State:", { conversationStep, userInfo, isSchedulingDirectly, directScheduleSubStep });
                 return;
             }
 
-            // --- Priority 2: Handle active direct message leaving flow ---
             if (isLeavingMessageDirectly) {
                 if (directMessageSubStep === 1) {
                     userInfo.name = message;
-                    console.log("Name stored for direct message: userInfo.name =", userInfo.name);
                     await addBotMessage(messages[lang].askCompany.replace('{name}', userInfo.name || (lang === 'en' ? 'there' : '皆様')));
                     directMessageSubStep = 2;
                 } else if (directMessageSubStep === 2) {
                     userInfo.company = message;
-                    console.log("Company stored for direct message: userInfo.company =", userInfo.company);
                     await addBotMessage(messages[lang].messagePrompt);
                     await delay(1500);
                     showMessageForm();
@@ -1116,28 +1158,23 @@
                     directMessageSubStep = 0;
                     conversationStep = 99;
                 } else {
-                    console.warn("Unexpected sub-step in direct message leaving flow. Resetting.");
                     await addBotMessage(messages[lang].generalFallback);
                     startConversation();
                 }
                 enableInput();
-                console.log("Handled ongoing direct message leaving. State:", { conversationStep, userInfo, isLeavingMessageDirectly, directMessageSubStep });
                 return;
             }
 
-            // --- Priority 3: Handle post-scheduling confirmation ---
             if (waitingForScheduleConfirmation) {
                 await handleScheduleFollowUp(message);
                 enableInput();
-                console.log("Handled schedule confirmation. State:", { waitingForScheduleConfirmation });
                 return;
             }
 
-            // --- Priority 4: Initial Intent Detection / General conversation flow ---
             const rogerGreetingKeywords = [
                 messages[lang].intro.split('\n')[2].toLowerCase().replace('• ', ''),
                 "roger's greetings", "greeting", "ロジャーのごあいさつ", "ごあいさつ", "歓迎",
-                quickRepliesData[lang].start[2].toLowerCase() // "Hear a greeting from Roger"
+                quickRepliesData[lang].start[2].toLowerCase()
             ];
             const isRogerGreetingIntent = rogerGreetingKeywords.some(keyword => lowerMessage.includes(keyword));
 
@@ -1148,14 +1185,13 @@
                 showQuickReplies('purpose');
                 enableInput();
                 conversationStep = 99;
-                console.log("Handled Roger Greeting. State:", { conversationStep, userInfo });
                 return;
             }
 
             const videoIntentKeywords = [
                 (messages[lang].intro.split('\n')[3] || '').toLowerCase().replace('• ', ''),
                 "watch video", "video", "ビデオ", "見る", "movie", "動画",
-                quickRepliesData[lang].start[3].toLowerCase() // "Watch Roger's Video"
+                quickRepliesData[lang].start[3].toLowerCase()
             ];
             const isVideoIntent = videoIntentKeywords.some(keyword => lowerMessage.includes(keyword));
 
@@ -1166,14 +1202,13 @@
                 showQuickReplies('purpose');
                 enableInput();
                 conversationStep = 99;
-                console.log("Handled Watch Video intent. State:", { conversationStep, userInfo });
                 return;
             }
 
             const linkedinIntentKeywords = [
                 (messages[lang].intro.split('\n')[4] || '').toLowerCase().replace('• ', ''),
                 "linkedin", "connect on linkedin", "つながる", "リンクトイン", "プロフィール",
-                quickRepliesData[lang].start[4].toLowerCase() // "Connect on LinkedIn"
+                quickRepliesData[lang].start[4].toLowerCase()
             ];
             const isLinkedInIntent = linkedinIntentKeywords.some(keyword => lowerMessage.includes(keyword));
 
@@ -1184,39 +1219,33 @@
                 showQuickReplies('purpose');
                 enableInput();
                 conversationStep = 99;
-                console.log("Handled LinkedIn intent. State:", { conversationStep, userInfo });
                 return;
             }
 
             const scheduleIntentKeywords = [
-                quickRepliesData[lang].start[0].toLowerCase().split(" ")[0], // "Schedule a chat"
+                quickRepliesData[lang].start[0].toLowerCase().split(" ")[0],
                 "schedule", "chat", "予約", "チャット", "book", "calendly", "カレンダー"
             ];
             const isScheduleIntent = scheduleIntentKeywords.some(keyword => lowerMessage.includes(keyword));
 
             if (isScheduleIntent) {
                 initiateDirectScheduling();
-                console.log("Initiated direct scheduling. State:", { conversationStep, userInfo, isSchedulingDirectly, directScheduleSubStep });
                 return;
             }
 
             const messageIntentKeywords = [
-                quickRepliesData[lang].start[1].toLowerCase().split(" ")[0], // "Leave a message"
+                quickRepliesData[lang].start[1].toLowerCase().split(" ")[0],
                 "message", "メッセージ", "leave a message", "連絡"
             ];
             const isMessageIntent = messageIntentKeywords.some(keyword => lowerMessage.includes(keyword));
 
             if (isMessageIntent) {
                 initiateDirectMessage();
-                console.log("Initiated direct message leaving. State:", { conversationStep, userInfo, isLeavingMessageDirectly, directMessageSubStep });
                 return;
             }
 
-            // NEW: Handle the specific "Open Roger's Calendar" button click (from text input or quick reply)
             if (lowerMessage === messages[lang].openCalendlyButton.toLowerCase() || lowerMessage === quickRepliesData[lang].openCalendly[0].toLowerCase()) {
                 window.open('https://calendly.com/gomes-roger333', '_blank');
-
-                // Reset direct scheduling flags immediately after opening Calendly
                 isSchedulingDirectly = false;
                 directScheduleSubStep = 0;
 
@@ -1225,61 +1254,42 @@
                     await addBotMessage(messages[lang].scheduleFollowUp);
                     showQuickReplies('scheduleConfirm');
                     enableInput();
-                }, 1000); // Small delay before asking for confirmation
-                console.log("Opened Calendly via button click/text input. Resetting direct scheduling flags.");
+                }, 1000);
                 return;
             }
 
-
-            // --- Fallback: General conversation flow (should be less frequent with direct options) ---
-            // If the user types something not directly matching an intent, we can try to guide them.
-            if (conversationStep < 99) { // Only increment if not in a special flow
+            if (conversationStep < 99) {
                 conversationStep++;
             }
-            console.log("After general flow conversationStep increment/check: conversationStep =", conversationStep);
 
             switch(conversationStep) {
-                case 1: // This case will now be hit if the user types something generic
-                    await addBotMessage(messages[currentLanguage].generalFallback);
-                    showQuickReplies('start'); // Re-show main options
-                    conversationStep = 0; // Reset to allow re-evaluation if user inputs again
-                    break;
-                case 2: // This case should ideally not be hit unless we explicitly ask for name/company
-                case 3:
+                case 1:
                 default:
                     await addBotMessage(messages[currentLanguage].generalFallback);
-                    showQuickReplies('start'); // Re-show main options
-                    conversationStep = 0; // Reset to allow re-evaluation if user inputs again
+                    showQuickReplies('start');
+                    conversationStep = 0;
                     break;
             }
             enableInput();
-            console.log("End of processUserMessage (final): conversationStep =", conversationStep, ", userInfo =", JSON.stringify(userInfo));
         }
 
-        /**
-         * Handles the user's selection of purpose (schedule, message, learn, video, linkedin).
-         * This function is primarily for when the user selects a purpose *after* name/company are known.
-         */
         async function handlePurposeSelection(message) {
             console.log("handlePurposeSelection called. Message:", message);
             const lowerMessage = message.toLowerCase();
             const lang = currentLanguage;
 
-            // --- Priority 0: Handle Exit Intent within purpose options ---
             const exitKeywords = [
-                messages[lang].exitButton.toLowerCase(), // "Exit" or "終了"
-                "quit", "end chat", "やめる", "会話を終了", "bye", "さようなら" // More keywords
+                messages[lang].exitButton.toLowerCase(),
+                "quit", "end chat", "やめる", "会話を終了", "bye", "さようなら"
             ];
             const isExitIntent = exitKeywords.some(keyword => lowerMessage.includes(keyword));
 
             if (isExitIntent || lowerMessage === quickRepliesData[lang].purpose[5].toLowerCase()) {
-                console.log("Exit intent detected from purpose selection. Initiating exit flow."); // Debug log
                 await addBotMessage(messages[lang].goodbye);
                 await delay(2000);
                 showRatingPrompt();
                 enableInput();
                 conversationStep = 100;
-                console.log("Handled Exit intent from purpose selection. State:", { conversationStep });
                 return;
             }
 
@@ -1311,47 +1321,35 @@
                 await addBotMessage(messages[lang].generalFallback);
                 showQuickReplies('purpose');
             }
-            console.log("End of handlePurposeSelection.");
         }
 
-        /**
-         * Handles follow-up responses after opening the scheduling calendar.
-         */
         async function handleScheduleFollowUp(message) {
             console.log("handleScheduleFollowUp called. Message:", message);
             const lowerMessage = message.toLowerCase();
             const lang = currentLanguage;
 
-            // Check if the message matches "Yes, I'm done" (or Japanese equivalent)
             if (lowerMessage.includes(quickRepliesData[lang].scheduleConfirm[0].toLowerCase()) || lowerMessage.includes("yes") || lowerMessage.includes("はい") || lowerMessage.includes(messages[lang].scheduleConfirm[0].toLowerCase())) {
                 await addBotMessage(messages[lang].appointmentComplete);
                 await delay(2000);
                 showRatingPrompt();
-                // Ensure all scheduling related flags are false after completion
                 isSchedulingDirectly = false;
                 directScheduleSubStep = 0;
                 waitingForScheduleConfirmation = false;
             }
-            // Check if the message matches "Still working on it" (or Japanese equivalent)
             else if (lowerMessage.includes(quickRepliesData[lang].scheduleConfirm[1].toLowerCase()) || lowerMessage.includes("still") || lowerMessage.includes("まだ") || lowerMessage.includes(messages[lang].scheduleConfirm[1].toLowerCase())) {
                 await addBotMessage(messages[lang].scheduleStillWorking);
                 showQuickReplies('scheduleConfirm');
-                waitingForScheduleConfirmation = true; // Keep waiting
+                waitingForScheduleConfirmation = true;
             }
-            // If none of the above, it's an unrecognized response, re-prompt for clarity
             else {
                 await addBotMessage(messages[lang].scheduleHelp);
                 showQuickReplies('scheduleConfirm');
-                waitingForScheduleConfirmation = true; // Keep waiting
+                waitingForScheduleConfirmation = true;
             }
-            console.log("End of handleScheduleFollowUp.");
         }
 
         // --- UI Updates & Interactions ---
 
-        /**
-         * Displays the message form and hides the chat input.
-         */
         function showMessageForm() {
             console.log("showMessageForm called.");
             chatInputContainer.classList.add('hidden');
@@ -1364,12 +1362,8 @@
             if (userInfo.company) document.getElementById('formCompany').value = userInfo.company;
             document.getElementById('formEmail').focus();
             document.getElementById('formMessage').value = '';
-            console.log("End of showMessageForm.");
         }
 
-        /**
-         * Updates the text content of form labels based on the current language.
-         */
         function updateFormLabels() {
             const labels = formLabelsData[currentLanguage];
             nameLabel.textContent = labels.name;
@@ -1380,9 +1374,6 @@
             generateDraftButtonText.textContent = messages[currentLanguage].generateDraft;
         }
 
-        /**
-         * Handles the submission of the message form by sending data to Google Apps Script.
-         */
         async function submitMessageForm(event) {
             event.preventDefault();
             console.log("submitMessageForm called.");
@@ -1434,12 +1425,8 @@
                     generateDraftButton.disabled = false;
                 }, 3000);
             }
-            console.log("End of submitMessageForm.");
         }
 
-        /**
-         * Function to generate a message draft using Gemini API.
-         */
         async function generateMessageDraft() {
             console.log("generateMessageDraft called.");
             const formMessageInput = document.getElementById('formMessage');
@@ -1498,13 +1485,8 @@
                 }, 2000);
                 autoResizeTextarea.call(formMessageInput);
             }
-            console.log("End of generateMessageDraft.");
         }
 
-
-        /**
-         * Displays quick reply buttons in the chat interface.
-         */
         function showQuickReplies(type) {
             console.log("showQuickReplies called. Type:", type);
             quickRepliesContainer.innerHTML = '';
@@ -1522,12 +1504,8 @@
                 quickRepliesContainer.classList.remove('hidden');
                 scrollToBottom();
             }
-            console.log("End of showQuickReplies.");
         }
 
-        /**
-         * Handles a click on a quick reply button.
-         */
         function handleQuickReply(replyText) {
             console.log("handleQuickReply called. Reply Text:", replyText);
             addMessageToDOM(replyText, 'user');
@@ -1537,7 +1515,6 @@
             const lang = currentLanguage;
             const lowerReplyText = replyText.toLowerCase();
 
-            // Determine which set of quick replies was active
             const activeReplySetType = quickRepliesContainer.dataset.replyType;
             let currentReplySet;
 
@@ -1553,7 +1530,6 @@
 
 
             if (currentReplySet) {
-                // --- Priority 0: Handle Exit Intent ---
                 const exitKeywords = [
                     messages[lang].exitButton.toLowerCase(),
                     "quit", "end chat", "やめる", "会話を終了", "bye", "さようなら"
@@ -1561,14 +1537,12 @@
                 const isExitIntent = exitKeywords.some(keyword => lowerReplyText.includes(keyword));
 
                 if (isExitIntent || lowerReplyText === messages[lang].exitButton.toLowerCase()) {
-                    processUserMessage(messages[lang].exitButton); // Route through processUserMessage for consistent exit
+                    processUserMessage(messages[lang].exitButton);
                     return;
                 }
 
                 if (activeReplySetType === 'openCalendly' && lowerReplyText.includes(messages[lang].openCalendlyButton.toLowerCase().split(" ")[0])) {
                     window.open('https://calendly.com/gomes-roger333', '_blank');
-
-                    // Reset direct scheduling flags immediately after opening Calendly
                     isSchedulingDirectly = false;
                     directScheduleSubStep = 0;
 
@@ -1578,17 +1552,16 @@
                         showQuickReplies('scheduleConfirm');
                         enableInput();
                     }, 1000);
-                    console.log("Opened Calendly via quick reply. Resetting direct scheduling flags.");
-                    return; // Exit after handling this specific button
-                } else if (lowerReplyText.includes(quickRepliesData[lang].start[2].toLowerCase())) { // "Hear a greeting from Roger"
+                    return;
+                } else if (lowerReplyText.includes(quickRepliesData[lang].start[2].toLowerCase())) {
                     processUserMessage(replyText);
-                } else if (lowerReplyText.includes(quickRepliesData[lang].start[3].toLowerCase())) { // "Watch Roger's Video"
+                } else if (lowerReplyText.includes(quickRepliesData[lang].start[3].toLowerCase())) {
                     processUserMessage(replyText);
-                } else if (lowerReplyText.includes(quickRepliesData[lang].start[4].toLowerCase())) { // "Connect on LinkedIn"
+                } else if (lowerReplyText.includes(quickRepliesData[lang].start[4].toLowerCase())) {
                     processUserMessage(replyText);
-                } else if (lowerReplyText.includes(quickRepliesData[lang].start[0].toLowerCase())) { // "Schedule a chat"
+                } else if (lowerReplyText.includes(quickRepliesData[lang].start[0].toLowerCase())) {
                     initiateDirectScheduling();
-                } else if (lowerReplyText.includes(quickRepliesData[lang].start[1].toLowerCase())) { // "Leave a message"
+                } else if (lowerReplyText.includes(quickRepliesData[lang].start[1].toLowerCase())) {
                     initiateDirectMessage();
                 } else if (activeReplySetType === 'purpose' && lowerReplyText === currentReplySet[0].toLowerCase()) {
                     initiateDirectScheduling();
@@ -1600,9 +1573,9 @@
                     processUserMessage(replyText);
                 } else if (activeReplySetType === 'purpose' && lowerReplyText === currentReplySet[4].toLowerCase()) {
                     processUserMessage(replyText);
-                } else if (activeReplySetType === 'scheduleConfirm' && (lowerReplyText === currentReplySet[0].toLowerCase() || lowerReplyText.includes(messages[lang].scheduleConfirm[0].toLowerCase()))) { // "Yes, I'm done"
+                } else if (activeReplySetType === 'scheduleConfirm' && (lowerReplyText === currentReplySet[0].toLowerCase() || lowerReplyText.includes(messages[lang].scheduleConfirm[0].toLowerCase()))) {
                     processUserMessage(replyText);
-                } else if (activeReplySetType === 'scheduleConfirm' && (lowerReplyText === currentReplySet[1].toLowerCase() || lowerReplyText.includes(messages[lang].scheduleConfirm[1].toLowerCase()))) { // "Still working on it"
+                } else if (activeReplySetType === 'scheduleConfirm' && (lowerReplyText === currentReplySet[1].toLowerCase() || lowerReplyText.includes(messages[lang].scheduleConfirm[1].toLowerCase()))) {
                     processUserMessage(replyText);
                 } else {
                     processUserMessage(replyText);
@@ -1610,55 +1583,27 @@
             } else {
                 processUserMessage(replyText);
             }
-            console.log("End of handleQuickReply.");
         }
 
-        /**
-         * Hides the quick replies container.
-         */
         function hideQuickReplies() {
             quickRepliesContainer.classList.add('hidden');
         }
 
-        /**
-         * Disables the chat input and send button.
-         */
         function disableInput() {
             chatInput.disabled = true;
             sendButton.disabled = true;
         }
 
-        /**
-         * Enables the chat input and send button, and focuses on the input.
-         */
         function enableInput() {
             chatInput.disabled = false;
             sendButton.disabled = false;
             chatInput.focus();
         }
 
-        /**
-         * Scrolls the chat messages container to the bottom to show the latest message.
-         */
         function scrollToBottom() {
             chatMessagesContainer.scrollTop = chatMessagesContainer.scrollHeight;
         }
 
-        /**
-         * Toggles the current language between English and Japanese.
-         */
-        function toggleLanguage() {
-            console.log("toggleLanguage called. Current language:", currentLanguage);
-            currentLanguage = (currentLanguage === 'en') ? 'ja' : 'en';
-            updateUIForLanguage();
-            startConversation(); // Restart conversation to play new video
-            console.log("Language toggled to:", currentLanguage);
-        }
-
-        /**
-         * Updates static UI elements (chat title, subtitle, input placeholder, form labels)
-         * based on the `currentLanguage`.
-         */
         function updateUIForLanguage() {
             chatTitleElement.textContent = messages[currentLanguage].chatTitleMain;
             chatSubtitleElement.textContent = messages[currentLanguage].chatSubtitleMain;
@@ -1667,13 +1612,9 @@
             updateFormLabels();
             ratingPrompt.textContent = messages[currentLanguage].rateExperience;
             ratingThankYou.textContent = messages[currentLanguage].thankYouForFeedback;
-            // Update creator signature
             creatorSignatureElement.textContent = messages[currentLanguage].creatorSignaturePrefix + " Roger Gomes";
         }
 
-        /**
-         * Displays the star rating prompt.
-         */
         function showRatingPrompt() {
             console.log("showRatingPrompt called.");
             chatInputContainer.classList.add('hidden');
@@ -1684,12 +1625,8 @@
             ratingThankYou.classList.add('hidden');
             resetStars();
             scrollToBottom();
-            console.log("End of showRatingPrompt.");
         }
 
-        /**
-         * Handles click event on stars for rating.
-         */
         async function handleStarRatingClick(event) {
             console.log("handleStarRatingClick called.");
             const clickedStar = event.target.closest('.star');
@@ -1712,19 +1649,14 @@
 
                 setTimeout(async () => {
                     chatRatingContainer.classList.add('hidden');
-                    // The goodbye message is now handled when the Exit intent is detected
                     await delay(3000);
                     disableInput();
                     hideQuickReplies();
                     console.log("Chat ended after rating.");
                 }, 2000);
             }
-            console.log("End of handleStarRatingClick.");
         }
 
-        /**
-         * Handles hover effect for stars.
-         */
         function handleStarRatingHover(event) {
             const hoveredStar = event.target.closest('.star');
             if (hoveredStar && starRatingContainer.style.pointerEvents !== 'none') {
@@ -1740,27 +1672,18 @@
             }
         }
 
-        /**
-         * Handles mouseout effect for stars (resets to no selection if no star was clicked).
-         */
         function handleStarRatingOut(event) {
             if (starRatingContainer.style.pointerEvents !== 'none') {
                 resetStars();
             }
         }
 
-        /**
-         * Resets all stars to their default unselected state.
-         */
         function resetStars() {
             const stars = Array.from(starRatingContainer.children);
             stars.forEach(star => star.classList.remove('selected'));
             starRatingContainer.style.pointerEvents = 'auto';
         }
 
-        /**
-         * A utility function to create a delay using Promises, allowing for async/await.
-         */
         function delay(ms) {
             return new Promise(resolve => setTimeout(resolve, ms));
         }
