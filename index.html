@@ -202,6 +202,15 @@
             align-self: flex-end;
             border-bottom-right-radius: 4px;
         }
+        /* Resume Iframe Styling */
+        .message.bot .resume-embed {
+            width: 100%;
+            height: 400px;
+            border: 1px solid #ddd;
+            border-radius: 10px;
+            margin-top: 10px;
+        }
+
 
         /* Typing Indicator */
         .typing-indicator {
@@ -570,7 +579,7 @@
 </head>
 <body>
     <div class="language-selection-screen" id="languageSelectionScreen">
-        <h1>Select your language / 言語を選択してください</h1>
+        <h1>Select your language /<br>言語を選択してください</h1>
         <button class="language-button english" data-lang="en">English</button>
         <button class="language-button japanese" data-lang="ja">日本語</button>
     </div>
@@ -658,8 +667,6 @@
         let userInfo = {};
         let isTyping = false;
         let waitingForScheduleConfirmation = false;
-        let isSchedulingDirectly = false;
-        let directScheduleSubStep = 0;
         let isLeavingMessageDirectly = false;
         let directMessageSubStep = 0;
 
@@ -679,19 +686,18 @@
         const messages = {
             en: {
                 welcome: "👋 Hello! I'm Roger's AI assistant. I'm here to connect you with Roger.",
-                intro: "I can help you:\n• Schedule a casual chat with Roger\n• Leave a message for Roger\n• Hear a greeting from Roger\n• Watch Roger's Video\n• Connect on LinkedIn",
+                intro: "I can help you:\n• Schedule a chat\n• Leave a message\n• Generate Professional Summary\n• Watch Roger's Video\n• View Resume\n• Connect on LinkedIn",
                 askName: "Great! Let's start. What's your name?",
                 askCompany: "Nice to meet you, {name}! What company do you work for?",
                 askPurpose: "Thanks, {name}! What brings you here today? Are you looking to:",
-                rogerMessage: "Hello and thank you for reaching out!\n\nI’m always eager to connect with forward-thinking teams and explore exciting opportunities where I can make a real impact. Whether you’re hiring for a specific role or just exploring how I could support your business goals—I’d love to chat. Let’s discover what we can build together!\n– Roger",
+                professionalSummary: "Roger Gomes is a Strategic GTM and DX Leader with 20+ years of experience scaling B2B SaaS, AI, and startup ventures across APAC and North America. He specializes in 0→1 product launches, cross-regional program management, and digital/business transformation that accelerates operational agility and sustainable growth.\n\nHe has led over $33M in global projects, aligning diverse stakeholders across Japan, Thailand, and Australia. His Japanese is conversational (not business-level), but he has effectively managed bilingual teams of up to 16 Japanese staff using Slack, Teams, LINE, Zoom, and AI tools. Based in Japan with no visa sponsorship required, Roger is open to relocation and values cultures of ownership, continuous learning, and practical problem-solving.",
                 afterRogerMessage: "Is there anything else I can help you with?\n\nFeel free to use the buttons below to schedule a chat with Roger or leave a message—whichever works best for you!",
-                scheduleDirectMessage: "Perfect! Please click the button below to open Roger's calendar and schedule your chat.",
                 scheduleConfirm: "Perfect! I'll open Roger's calendar for you. You can schedule a time that works best.",
                 scheduleFollowUp: "Have you finished scheduling your appointment with Roger?",
                 appointmentComplete: "Excellent! Roger will receive your booking confirmation and will be prepared for your meeting. Thank you for connecting with us!",
                 windowClosing: "This window will close automatically in 3 seconds...",
                 messagePrompt: "I'd be happy to help you send a message to Roger. Please fill out the form below:",
-                goodbye: "Thank Thank you for your time! Feel free to reach out anytime.",
+                goodbye: "Thank you for your time! Feel free to reach out anytime.",
                 scheduleStillWorking: "No problem! Please let me know if you are 'done' or are 'still working on it' when you are ready to proceed.",
                 scheduleHelp: "I'm sorry, I didn't understand. Please let me know if you are 'done' or are 'still working on it'.",
                 generalFallback: "I'm sorry, I didn't quite understand what you meant. If you're having trouble typing, you can always choose an option from the buttons below.",
@@ -708,8 +714,8 @@
                 rateExperience: "Please rate your experience:",
                 thankYouForFeedback: "Thank You for your feedback!",
                 watchVideo: "Certainly! Here's Roger's video for recruiters: <a href='https://vimeo.com/1090730386/4c50b956d0' target='_blank' rel='noopener noreferrer' class='video-link'>From Paper to Person</a>",
+                viewResume: "Of course. Here is Roger's resume:<br><iframe src='https://drive.google.com/file/d/1QvKRiQVG8sSTsjMPtjjR0mqjgEHo1Tob/preview' class='resume-embed'></iframe>",
                 linkedinMessage: "Great! Here's a link to Roger's LinkedIn profile: <a href='https://www.linkedin.com/in/meetrogergomes' target='_blank' rel='noopener noreferrer' class='linkedin-link'>linkedin.com/in/meetrogergomes</a>",
-                openCalendlyButton: "Open Roger's Calendar",
                 exitButton: "Exit",
                 creatorSignaturePrefix: "Created by",
                 welcomeVideo: 'https://gomesroger.github.io/roger-ai-assets/Ai%20Assistant%20Video-%20ENG.webm',
@@ -717,13 +723,12 @@
             },
             ja: {
                 welcome: "👋 こんにちは！私はロジャーのAIアシスタントです。ロジャーとつながるお手伝いをします。",
-                intro: "以下のことをお手伝いできます：\n• ロジャーとのカジュアルチャットのスケジュール調整\n• ロジャーへのメッセージのお預かり\n• ロジャーより歓迎の言葉\n• ロジャーのビデオを見る\n• LinkedInでつながる",
+                intro: "以下のことをお手伝いできます：\n• チャットを予約\n• メッセージを残す\n• 職歴・スキル概要を作成\n• ロジャーのビデオを見る\n• 履歴書を見る\n• 職務経歴書を見る\n• LinkedInでつながる",
                 askName: "まず、お名前を教えてください。",
                 askCompany: "{name}さん、はじめまして！どちらの会社にお勤めですか？",
                 askPurpose: "{name}さん、ありがとうございます！本日はどのようなご用件でしょうか？",
-                rogerMessage: "こんにちは！ご連絡いただきありがとうございます。\n\n常に新しいご縁やチャレンジにワクワクしています。具体的なポジションのご相談はもちろん、「どんな形で力になれるか話してみたい」というカジュアルなご連絡も大歓迎です。\n\nご一緒に新しい可能性を探っていけたら嬉しいです！\n– ロジャー",
+                professionalSummary: "ロジャー・ゴメスは、APACおよび北米地域におけるB2B SaaS、AI、スタートアップ事業のスケール支援に20年以上の経験を持つ、GTM戦略およびDXリーダーです。0→1のプロダクト立ち上げ、クロスボーダープロジェクトのマネジメント、デジタル／ビジネス変革を通じて、持続可能な成長と業務の機動力を実現してきました。\n\nこれまでに総額3,300万ドル超の国際プロジェクトをリードし、日本・タイ・オーストラリア間で多様な関係者を円滑に連携させてきました。日本語は日常会話レベル（ビジネスレベルではありません）ですが、前職では日本人スタッフ16名以上のチームをSlack、Teams、LINE、Zoom、AIツールなどを活用しながらマネジメントしてきました。\n\n現在は日本に在住しており、ビザ支援は不要です。引っ越しにも柔軟に対応可能で、オーナーシップを重視する企業文化、継続的な学び、そして現場課題の解決に貢献できる環境を大切にしています。",
                 afterRogerMessage: "他にお手伝いできることはありますか？\n\nロジャーとのチャット予約やメッセージの送信は、下のボタンからお気軽にどうぞ！",
-                scheduleDirectMessage: "完璧です！以下のボタンをクリックしてロジャーのカレンダーを開き、チャットを予約してください。",
                 scheduleConfirm: "完璧です！ロジャーのカレンダーを開きます。最適な時間を選択してください。",
                 scheduleFollowUp: "ロジャーとのアポイントメントの予約は完了しましたか？",
                 appointmentComplete: "素晴らしい！ロジャーが予約確認を受け取り、ミーティングの準備をいたします。ご連絡いただきありがとうございました！",
@@ -746,27 +751,26 @@
                 rateExperience: "体験はいかがでしたか？",
                 thankYouForFeedback: "フィードバックありがとうございます！",
                 watchVideo: "はい、承知いたしました。採用担当者向けのロジャーのビデオはこちらです：<a href='https://vimeo.com/1090731598/b065f49f38' target='_blank' rel='noopener noreferrer' class='video-link'>簡単なご挨拶</a>",
+                viewRirekisho: "はい、承知いたしました。ロジャーの履歴書です：<br><iframe src='https://drive.google.com/file/d/1BAUvcifMVwEwcgs1q2xVzd5qZ9MHVd1u/preview' class='resume-embed'></iframe>",
+                viewShokumuKeirekisho: "はい、承知いたしました。ロジャーの職務経歴書です：<br><iframe src='https://drive.google.com/file/d/1YDySzzwUWRsnoCQxUT6YX4JCfje6mSRs/preview' class='resume-embed'></iframe>",
                 linkedinMessage: "はい、承知いたしました。ロジャーのLinkedInプロフィールはこちらです：<a href='https://www.linkedin.com/in/meetrogergomes' target='_blank' rel='noopener noreferrer' class='linkedin-link'>linkedin.com/in/meetrogergomes</a>",
-                openCalendlyButton: "ロジャーのカレンダーを開く",
                 exitButton: "終了",
                 creatorSignaturePrefix: "作成者：",
-                welcomeVideo: 'https://gomesroger.github.io/roger-ai-assets/Ai%20Assistant%20Video-%20JPN.webm', // 日本語動画URLをJPN.webmに修正
+                welcomeVideo: 'https://gomesroger.github.io/roger-ai-assets/Ai%20Assistant%20Video-%20JPN.webm', 
                 videoPlaybackError: "動画を再生できませんでした。テキストでの導入に進みます。"
             }
         };
 
         const quickRepliesData = {
             en: {
-                start: ["Schedule a chat", "Leave a message", "Hear a greeting from Roger", "Watch Roger's Video", "Connect on LinkedIn", "Exit"],
-                purpose: ["Schedule a chat", "Leave a message", "Roger's greetings", "Watch Roger's Video", "Connect on LinkedIn", "Exit"],
+                start: ["Schedule a chat", "Leave a message", "Generate Professional Summary", "Watch Roger's Video", "View Resume", "Connect on LinkedIn", "Exit"],
+                purpose: ["Schedule a chat", "Leave a message", "Generate Professional Summary", "Watch Roger's Video", "View Resume", "Connect on LinkedIn", "Exit"],
                 scheduleConfirm: ["Yes, I'm done", "Still working on it"],
-                openCalendly: ["Open Roger's Calendar"]
             },
             ja: {
-                start: ["チャットを予約", "メッセージを残す", "ロジャーより歓迎の言葉", "ロジャーのビデオを見る", "LinkedInでつながる", "終了"],
-                purpose: ["チャットを予約", "メッセージを残す", "ロジャーのごあいさつ", "ロジャーのビデオを見る", "LinkedInでつながる", "終了"],
+                start: ["チャットを予約", "メッセージを残す", "職歴・スキル概要を作成", "ロジャーのビデオを見る", "履歴書を見る", "職務経歴書を見る", "LinkedInでつながる", "終了"],
+                purpose: ["チャットを予約", "メッセージを残す", "職歴・スキル概要を作成", "ロジャーのビデオを見る", "履歴書を見る", "職務経歴書を見る", "LinkedInでつながる", "終了"],
                 scheduleConfirm: ["はい、完了しました", "まだ作業中です"],
-                openCalendly: ["ロジャーのカレンダーを開く"]
             }
         };
 
@@ -891,8 +895,6 @@
             userInfo = {};
             waitingForScheduleConfirmation = false;
             isTyping = false;
-            isSchedulingDirectly = false;
-            directScheduleSubStep = 0;
             isLeavingMessageDirectly = false;
             directMessageSubStep = 0;
 
@@ -940,7 +942,6 @@
             // Event listener for video errors
             welcomeVideoPlayer.onerror = (e) => {
                 console.error("playWelcomeVideo: Video error occurred:", e);
-                console.log(`playWelcomeVideo: Video state on error: src=${welcomeVideoPlayer.src}, error.code=${welcomeVideoPlayer.error ? welcomeVideoPlayer.error.code : 'N/A'}, error.message=${welcomeVideoPlayer.error ? welcomeToPlayer.error.message : 'N/A'}`);
                 welcomeVideoPlayer.classList.remove('visible');
                 chatHeaderElement.classList.remove('video-active'); // Show static header elements on error
                 // Display user-friendly message in chat
@@ -1079,17 +1080,6 @@
         }
 
         /**
-         * Initiates the direct scheduling flow.
-         */
-        async function initiateDirectScheduling() {
-            console.log("initiateDirectScheduling called.");
-            isSchedulingDirectly = true;
-            directScheduleSubStep = 1;
-            await addBotMessage(messages[currentLanguage].askName);
-            enableInput();
-        }
-
-        /**
          * Initiates the direct message leaving flow.
          */
         async function initiateDirectMessage() {
@@ -1101,49 +1091,16 @@
         }
 
         /**
-         * Processes the user's message based on the current conversation step and direct flow states.
+         * REFACTORED: Processes the user's message with a clearer, prioritized logic.
          */
         async function processUserMessage(message) {
-            console.log("processUserMessage called. Current message:", message);
+            console.log("processUserMessage called. Message:", message);
             await delay(500);
 
             const lowerMessage = message.toLowerCase();
             const lang = currentLanguage;
 
-            const exitKeywords = [
-                messages[lang].exitButton.toLowerCase(),
-                "quit", "end chat", "やめる", "会話を終了", "bye", "さようなら"
-            ];
-            const isExitIntent = exitKeywords.some(keyword => lowerMessage.includes(keyword));
-
-            if (isExitIntent || lowerMessage === quickRepliesData[lang].start[5].toLowerCase() || lowerMessage === quickRepliesData[lang].purpose[5].toLowerCase()) {
-                console.log("Exit intent detected. Initiating exit flow.");
-                await addBotMessage(messages[lang].goodbye);
-                await delay(2000);
-                showRatingPrompt();
-                enableInput();
-                conversationStep = 100;
-                return;
-            }
-
-            if (isSchedulingDirectly) {
-                if (directScheduleSubStep === 1) {
-                    userInfo.name = message;
-                    await addBotMessage(messages[lang].askCompany.replace('{name}', userInfo.name || (lang === 'en' ? 'there' : '皆様')));
-                    directScheduleSubStep = 2;
-                } else if (directScheduleSubStep === 2) {
-                    userInfo.company = message;
-                    await addBotMessage(messages[lang].scheduleDirectMessage.replace('{name}', userInfo.name || (lang === 'en' ? 'there' : '皆様')));
-                    showQuickReplies('openCalendly');
-                    conversationStep = 99;
-                } else {
-                    await addBotMessage(messages[lang].generalFallback);
-                    startConversation();
-                }
-                enableInput();
-                return;
-            }
-
+            // --- 1. State-based conversation flows (take priority over new intents) ---
             if (isLeavingMessageDirectly) {
                 if (directMessageSubStep === 1) {
                     userInfo.name = message;
@@ -1154,12 +1111,9 @@
                     await addBotMessage(messages[lang].messagePrompt);
                     await delay(1500);
                     showMessageForm();
-                    isLeavingMessageDirectly = false;
+                    isLeavingMessageDirectly = false; // End of this sub-flow
                     directMessageSubStep = 0;
-                    conversationStep = 99;
-                } else {
-                    await addBotMessage(messages[lang].generalFallback);
-                    startConversation();
+                    conversationStep = 99; // Paused state (form is open)
                 }
                 enableInput();
                 return;
@@ -1171,155 +1125,82 @@
                 return;
             }
 
-            const rogerGreetingKeywords = [
-                messages[lang].intro.split('\n')[2].toLowerCase().replace('• ', ''),
-                "roger's greetings", "greeting", "ロジャーのごあいさつ", "ごあいさつ", "歓迎",
-                quickRepliesData[lang].start[2].toLowerCase()
-            ];
-            const isRogerGreetingIntent = rogerGreetingKeywords.some(keyword => lowerMessage.includes(keyword));
-
-            if (isRogerGreetingIntent) {
-                await addBotMessage(messages[lang].rogerMessage);
-                await delay(2500);
-                await addBotMessage(messages[lang].afterRogerMessage);
-                showQuickReplies('purpose');
+            // --- 2. Top-level commands and new intent matching ---
+            
+            // Exit command
+            const exitIntent = lang === 'ja' ? quickRepliesData.ja.start[7] : quickRepliesData.en.start[6];
+            const exitKeywords = ["quit", "end chat", "やめる", "会話を終了", "bye", "さようなら"];
+            if (exitKeywords.some(keyword => lowerMessage.includes(keyword)) || lowerMessage === exitIntent.toLowerCase()) {
+                await addBotMessage(messages[lang].goodbye);
+                await delay(2000);
+                showRatingPrompt();
                 enableInput();
-                conversationStep = 99;
+                conversationStep = 100; // End state
                 return;
             }
-
-            const videoIntentKeywords = [
-                (messages[lang].intro.split('\n')[3] || '').toLowerCase().replace('• ', ''),
-                "watch video", "video", "ビデオ", "見る", "movie", "動画",
-                quickRepliesData[lang].start[3].toLowerCase()
-            ];
-            const isVideoIntent = videoIntentKeywords.some(keyword => lowerMessage.includes(keyword));
-
-            if (isVideoIntent) {
-                await addBotMessage(messages[lang].watchVideo);
-                await delay(2500);
-                await addBotMessage(messages[lang].afterRogerMessage);
-                showQuickReplies('purpose');
-                enableInput();
-                conversationStep = 99;
-                return;
-            }
-
-            const linkedinIntentKeywords = [
-                (messages[lang].intro.split('\n')[4] || '').toLowerCase().replace('• ', ''),
-                "linkedin", "connect on linkedin", "つながる", "リンクトイン", "プロフィール",
-                quickRepliesData[lang].start[4].toLowerCase()
-            ];
-            const isLinkedInIntent = linkedinIntentKeywords.some(keyword => lowerMessage.includes(keyword));
-
-            if (isLinkedInIntent) {
-                await addBotMessage(messages[lang].linkedinMessage);
-                await delay(2500);
-                await addBotMessage(messages[lang].afterRogerMessage);
-                showQuickReplies('purpose');
-                enableInput();
-                conversationStep = 99;
-                return;
-            }
-
-            const scheduleIntentKeywords = [
-                quickRepliesData[lang].start[0].toLowerCase().split(" ")[0],
-                "schedule", "chat", "予約", "チャット", "book", "calendly", "カレンダー"
-            ];
-            const isScheduleIntent = scheduleIntentKeywords.some(keyword => lowerMessage.includes(keyword));
-
-            if (isScheduleIntent) {
-                initiateDirectScheduling();
-                return;
-            }
-
-            const messageIntentKeywords = [
-                quickRepliesData[lang].start[1].toLowerCase().split(" ")[0],
-                "message", "メッセージ", "leave a message", "連絡"
-            ];
-            const isMessageIntent = messageIntentKeywords.some(keyword => lowerMessage.includes(keyword));
-
-            if (isMessageIntent) {
-                initiateDirectMessage();
-                return;
-            }
-
-            if (lowerMessage === messages[lang].openCalendlyButton.toLowerCase() || lowerMessage === quickRepliesData[lang].openCalendly[0].toLowerCase()) {
+            
+            // --- 3. Intent Matching & Flow Control (New, safer structure) ---
+            
+            // Schedule a Chat (Direct action, then follow-up)
+            if (lowerMessage.includes("schedule a chat") || lowerMessage.includes("チャットを予約") || lowerMessage === quickRepliesData[lang].start[0].toLowerCase()) {
+                await addBotMessage(messages[lang].scheduleConfirm);
                 window.open('https://calendly.com/gomes-roger333', '_blank');
-                isSchedulingDirectly = false;
-                directScheduleSubStep = 0;
-
                 setTimeout(async () => {
                     waitingForScheduleConfirmation = true;
                     await addBotMessage(messages[lang].scheduleFollowUp);
                     showQuickReplies('scheduleConfirm');
                     enableInput();
-                }, 1000);
+                }, 2000);
                 return;
+            } 
+            // Leave a Message (starts a multi-step flow)
+            else if (lowerMessage.includes("leave a message") || lowerMessage.includes("メッセージを残す") || lowerMessage === quickRepliesData[lang].start[1].toLowerCase()) {
+                initiateDirectMessage();
+                return; 
             }
+            // All other intents are one-off and will be followed by the "after" message.
+            else {
+                let informationalIntentReply = null;
+                
+                // Japanese Resume Intents (checked first for specificity)
+                if (lang === 'ja' && (lowerMessage.includes("履歴書") || lowerMessage === quickRepliesData.ja.start[4].toLowerCase())) {
+                    informationalIntentReply = messages.ja.viewRirekisho;
+                } else if (lang === 'ja' && (lowerMessage.includes("職務経歴書") || lowerMessage === quickRepliesData.ja.start[5].toLowerCase())) {
+                    informationalIntentReply = messages.ja.viewShokumuKeirekisho;
+                } 
+                // English Resume Intent
+                else if (lang === 'en' && (lowerMessage.includes("resume") || lowerMessage === quickRepliesData.en.start[4].toLowerCase())) {
+                    informationalIntentReply = messages.en.viewResume;
+                } 
+                // Video Intent
+                else if (lowerMessage.includes("video") || lowerMessage.includes("ビデオ") || lowerMessage.includes("見る") || lowerMessage === quickRepliesData[lang].start[3].toLowerCase()) {
+                    informationalIntentReply = messages[lang].watchVideo;
+                } 
+                // Greeting Intent / Professional Summary
+                else if (lowerMessage.includes("summary") || lowerMessage.includes("概要") || lowerMessage === quickRepliesData[lang].start[2].toLowerCase()) {
+                    informationalIntentReply = messages[lang].professionalSummary;
+                }
+                // LinkedIn Intent
+                const linkedinIndex = lang === 'ja' ? 6 : 5;
+                if (!informationalIntentReply && (lowerMessage.includes("linkedin") || lowerMessage === quickRepliesData[lang].start[linkedinIndex].toLowerCase())) {
+                    informationalIntentReply = messages[lang].linkedinMessage;
+                }
 
-            if (conversationStep < 99) {
-                conversationStep++;
-            }
-
-            switch(conversationStep) {
-                case 1:
-                default:
+                // If any informational intent was matched, show the info and then the follow-up.
+                if (informationalIntentReply) {
+                    await addBotMessage(informationalIntentReply);
+                    await delay(2500);
+                    await addBotMessage(messages[lang].afterRogerMessage);
+                    showQuickReplies('purpose');
+                    enableInput();
+                    conversationStep = 99;
+                } else {
+                    // Fallback if no intent matches at all
                     await addBotMessage(messages[currentLanguage].generalFallback);
                     showQuickReplies('start');
                     conversationStep = 0;
-                    break;
-            }
-            enableInput();
-        }
-
-        async function handlePurposeSelection(message) {
-            console.log("handlePurposeSelection called. Message:", message);
-            const lowerMessage = message.toLowerCase();
-            const lang = currentLanguage;
-
-            const exitKeywords = [
-                messages[lang].exitButton.toLowerCase(),
-                "quit", "end chat", "やめる", "会話を終了", "bye", "さようなら"
-            ];
-            const isExitIntent = exitKeywords.some(keyword => lowerMessage.includes(keyword));
-
-            if (isExitIntent || lowerMessage === quickRepliesData[lang].purpose[5].toLowerCase()) {
-                await addBotMessage(messages[lang].goodbye);
-                await delay(2000);
-                showRatingPrompt();
-                enableInput();
-                conversationStep = 100;
-                return;
-            }
-
-            if (lowerMessage.includes(quickRepliesData[lang].purpose[0].toLowerCase().split(" ")[0]) || lowerMessage.includes("schedule") || lowerMessage.includes("chat") || lowerMessage.includes("予約") || lowerMessage.includes("チャット")) {
-                initiateDirectScheduling();
-            }
-            else if (lowerMessage.includes(quickRepliesData[lang].purpose[1].toLowerCase().split(" ")[0]) || lowerMessage.includes("message") || lowerMessage.includes("メッセージ")) {
-                initiateDirectMessage();
-            }
-            else if (lowerMessage.includes(quickRepliesData[lang].purpose[2].toLowerCase().split(" ")[0]) || lowerMessage.includes("roger's greetings") || lowerMessage.includes("ロジャーのごあいさつ") || lowerMessage.includes("learn") || lowerMessage.includes("経歴") || lowerMessage.includes("について") || lowerMessage.includes("greeting") || lowerMessage.includes("歓迎")) {
-                await addBotMessage(messages[lang].rogerMessage);
-                await delay(2500);
-                await addBotMessage(messages[lang].afterRogerMessage);
-                showQuickReplies('purpose');
-            }
-            else if (lowerMessage.includes((quickRepliesData[lang].purpose[3] || '').toLowerCase().split(" ")[0]) || lowerMessage.includes("watch video") || lowerMessage.includes("ビデオを見る") || lowerMessage.includes("video") || lowerMessage.includes("見る") || lowerMessage.includes("movie") || lowerMessage.includes("動画")) {
-                 await addBotMessage(messages[lang].watchVideo);
-                 await delay(2500);
-                 await addBotMessage(messages[lang].afterRogerMessage);
-                 showQuickReplies('purpose');
-            }
-            else if (lowerMessage.includes((quickRepliesData[lang].purpose[4] || '').toLowerCase().split(" ")[0]) || lowerMessage.includes("linkedin") || lowerMessage.includes("connect on linkedin") || lowerMessage.includes("つながる") || lowerMessage.includes("リンクトイン") || lowerMessage.includes("プロフィール")) {
-                await addBotMessage(messages[lang].linkedinMessage);
-                await delay(2500);
-                await addBotMessage(messages[lang].afterRogerMessage);
-                showQuickReplies('purpose');
-            }
-            else {
-                await addBotMessage(messages[lang].generalFallback);
-                showQuickReplies('purpose');
+                    enableInput();
+                }
             }
         }
 
@@ -1328,15 +1209,13 @@
             const lowerMessage = message.toLowerCase();
             const lang = currentLanguage;
 
-            if (lowerMessage.includes(quickRepliesData[lang].scheduleConfirm[0].toLowerCase()) || lowerMessage.includes("yes") || lowerMessage.includes("はい") || lowerMessage.includes(messages[lang].scheduleConfirm[0].toLowerCase())) {
+            if (lowerMessage.includes(quickRepliesData[lang].scheduleConfirm[0].toLowerCase()) || lowerMessage.includes("yes") || lowerMessage.includes("はい")) {
                 await addBotMessage(messages[lang].appointmentComplete);
                 await delay(2000);
                 showRatingPrompt();
-                isSchedulingDirectly = false;
-                directScheduleSubStep = 0;
                 waitingForScheduleConfirmation = false;
             }
-            else if (lowerMessage.includes(quickRepliesData[lang].scheduleConfirm[1].toLowerCase()) || lowerMessage.includes("still") || lowerMessage.includes("まだ") || lowerMessage.includes(messages[lang].scheduleConfirm[1].toLowerCase())) {
+            else if (lowerMessage.includes(quickRepliesData[lang].scheduleConfirm[1].toLowerCase()) || lowerMessage.includes("still") || lowerMessage.includes("まだ")) {
                 await addBotMessage(messages[lang].scheduleStillWorking);
                 showQuickReplies('scheduleConfirm');
                 waitingForScheduleConfirmation = true;
@@ -1401,29 +1280,23 @@
                 const response = await fetch(GOOGLE_APPS_SCRIPT_WEB_APP_URL, {
                     method: 'POST',
                     mode: 'no-cors',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
+                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(formData),
                 });
 
                 console.log("Response from Apps Script (due to no-cors, cannot read body):", response);
-
                 closeNoticeText.textContent = messages[currentLanguage].formSent;
+
+                await delay(1500); // Wait for user to read the notice
                 showRatingPrompt();
 
             } catch (error) {
                 console.error("Error sending message to Apps Script:", error);
                 closeNoticeText.textContent = messages[currentLanguage].formError;
-            } finally {
-                setTimeout(() => {
-                    messageForm.classList.add('hidden');
-                    chatInputContainer.classList.remove('hidden');
-                    closeNotice.classList.add('hidden');
-                    startConversation();
-                    submitBtn.disabled = false;
-                    generateDraftButton.disabled = false;
-                }, 3000);
+                // Re-enable buttons on failure
+                submitBtn.disabled = false;
+                generateDraftButton.disabled = false;
+                submitBtn.textContent = formLabelsData[currentLanguage].submit;
             }
         }
 
@@ -1450,11 +1323,11 @@
                 } else {
                     prompt = `ロジャーへのプロフェッショナルなメール/メッセージの下書きを作成してください。ユーザーの名前は「${userName}」、会社は「${userCompany}」です。メッセージの意図は「${userIntent}」です。下書きは簡潔でプロフェッショナルであり、ユーザーの目的を明確に伝えるようにしてください。`;
                 }
-
+                
                 let chatHistory = [];
                 chatHistory.push({ role: "user", parts: [{ text: prompt }] });
                 const payload = { contents: chatHistory };
-                const apiKey = "";
+                const apiKey = "" 
                 const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
 
                 const response = await fetch(apiUrl, {
@@ -1511,78 +1384,7 @@
             addMessageToDOM(replyText, 'user');
             hideQuickReplies();
             disableInput();
-
-            const lang = currentLanguage;
-            const lowerReplyText = replyText.toLowerCase();
-
-            const activeReplySetType = quickRepliesContainer.dataset.replyType;
-            let currentReplySet;
-
-            if (activeReplySetType === 'start') {
-                currentReplySet = quickRepliesData[lang].start;
-            } else if (activeReplySetType === 'purpose') {
-                currentReplySet = quickRepliesData[lang].purpose;
-            } else if (activeReplySetType === 'scheduleConfirm') {
-                currentReplySet = quickRepliesData[lang].scheduleConfirm;
-            } else if (activeReplySetType === 'openCalendly') {
-                currentReplySet = quickRepliesData[lang].openCalendly;
-            }
-
-
-            if (currentReplySet) {
-                const exitKeywords = [
-                    messages[lang].exitButton.toLowerCase(),
-                    "quit", "end chat", "やめる", "会話を終了", "bye", "さようなら"
-                ];
-                const isExitIntent = exitKeywords.some(keyword => lowerReplyText.includes(keyword));
-
-                if (isExitIntent || lowerReplyText === messages[lang].exitButton.toLowerCase()) {
-                    processUserMessage(messages[lang].exitButton);
-                    return;
-                }
-
-                if (activeReplySetType === 'openCalendly' && lowerReplyText.includes(messages[lang].openCalendlyButton.toLowerCase().split(" ")[0])) {
-                    window.open('https://calendly.com/gomes-roger333', '_blank');
-                    isSchedulingDirectly = false;
-                    directScheduleSubStep = 0;
-
-                    setTimeout(async () => {
-                        waitingForScheduleConfirmation = true;
-                        await addBotMessage(messages[lang].scheduleFollowUp);
-                        showQuickReplies('scheduleConfirm');
-                        enableInput();
-                    }, 1000);
-                    return;
-                } else if (lowerReplyText.includes(quickRepliesData[lang].start[2].toLowerCase())) {
-                    processUserMessage(replyText);
-                } else if (lowerReplyText.includes(quickRepliesData[lang].start[3].toLowerCase())) {
-                    processUserMessage(replyText);
-                } else if (lowerReplyText.includes(quickRepliesData[lang].start[4].toLowerCase())) {
-                    processUserMessage(replyText);
-                } else if (lowerReplyText.includes(quickRepliesData[lang].start[0].toLowerCase())) {
-                    initiateDirectScheduling();
-                } else if (lowerReplyText.includes(quickRepliesData[lang].start[1].toLowerCase())) {
-                    initiateDirectMessage();
-                } else if (activeReplySetType === 'purpose' && lowerReplyText === currentReplySet[0].toLowerCase()) {
-                    initiateDirectScheduling();
-                } else if (activeReplySetType === 'purpose' && lowerReplyText === currentReplySet[1].toLowerCase()) {
-                    initiateDirectMessage();
-                } else if (activeReplySetType === 'purpose' && lowerReplyText === currentReplySet[2].toLowerCase()) {
-                    processUserMessage(replyText);
-                } else if (activeReplySetType === 'purpose' && lowerReplyText === currentReplySet[3].toLowerCase()) {
-                    processUserMessage(replyText);
-                } else if (activeReplySetType === 'purpose' && lowerReplyText === currentReplySet[4].toLowerCase()) {
-                    processUserMessage(replyText);
-                } else if (activeReplySetType === 'scheduleConfirm' && (lowerReplyText === currentReplySet[0].toLowerCase() || lowerReplyText.includes(messages[lang].scheduleConfirm[0].toLowerCase()))) {
-                    processUserMessage(replyText);
-                } else if (activeReplySetType === 'scheduleConfirm' && (lowerReplyText === currentReplySet[1].toLowerCase() || lowerReplyText.includes(messages[lang].scheduleConfirm[1].toLowerCase()))) {
-                    processUserMessage(replyText);
-                } else {
-                    processUserMessage(replyText);
-                }
-            } else {
-                processUserMessage(replyText);
-            }
+            processUserMessage(replyText);
         }
 
         function hideQuickReplies() {
@@ -1648,12 +1450,29 @@
                 starRatingContainer.style.pointerEvents = 'none';
 
                 setTimeout(async () => {
-                    chatRatingContainer.classList.add('hidden');
-                    await delay(3000);
-                    disableInput();
-                    hideQuickReplies();
-                    console.log("Chat ended after rating.");
-                }, 2000);
+                    // Hide the main chat container
+                    chatContainer.style.display = 'none';
+
+                    // Create and style the final closing message
+                    const finalMessageContainer = document.createElement('div');
+                    finalMessageContainer.style.textAlign = 'center';
+                    finalMessageContainer.style.color = 'white';
+                    finalMessageContainer.style.fontSize = '1.2em';
+                    finalMessageContainer.style.padding = '40px';
+                    finalMessageContainer.style.maxWidth = '600px';
+                    finalMessageContainer.style.background = 'rgba(0, 0, 0, 0.2)';
+                    finalMessageContainer.style.borderRadius = '20px';
+                    finalMessageContainer.style.backdropFilter = 'blur(10px)';
+                    finalMessageContainer.style.animation = 'slideUp 0.6s ease-out';
+                    finalMessageContainer.innerHTML = `
+                        <p style="margin-bottom: 1.5em;">That’s a wrap for today! I hope Roger’s AI Assistant was helpful. Until next time! You can go ahead and close this window now.</p>
+                        <p>今日はここまでです！RogerのAIアシスタントがお役に立てていたら嬉しいです。<br>またお会いしましょう！このウィンドウは閉じていただいて大丈夫です。</p>
+                    `;
+                    
+                    // Append the final message to the body
+                    document.body.appendChild(finalMessageContainer);
+
+                }, 2000); // A 2-second delay after the "Thank you" message
             }
         }
 
