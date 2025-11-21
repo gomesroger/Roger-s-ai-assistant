@@ -1,1509 +1,1216 @@
 <!DOCTYPE html>
+<!-- 
+    Roger's AI Assistant - Enterprise Edition
+    Built by Roger Gomes
+    Last updated: November 22, 2025
+    Version: 14.0
+-->
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Roger's AI Assistant / ロジャーのAIアシスタント</title>
+    <title>Roger's AI Assistant | Enterprise Connect</title>
     <style>
-        /* General Reset and Body Styling */
+        /* * CORE VARIABLES & RESET
+         * Updated palette: Turquoise background + Gold accents
+         */
+        :root {
+            /* User requested Turquoise #00CEC8. 
+               Added a slightly darker shade for bottom to create a premium gradient depth. */
+            --bg-gradient-top: #00CEC8;
+            --bg-gradient-bottom: #00a6a2;
+            
+            --header-gradient-start: #4a5568; /* Dark Slate */
+            --header-gradient-end: #2d3748;   /* Darker Slate */
+            --primary-blue: #4299e1;
+            --primary-blue-dark: #3182ce;
+            --text-dark: #2d3748;
+            --text-light: #718096;
+            --shadow-soft: 0 10px 40px rgba(0,0,0,0.15);
+            --radius-lg: 20px;
+            --radius-md: 12px;
+            
+            /* Gold Colors for Avatar */
+            --gold-shiny: #FFD700;
+            --gold-glow: rgba(255, 215, 0, 0.6);
+        }
+
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
+            cursor: none; /* Hide default cursor globally */
         }
+
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, Helvetica, Arial, sans-serif;
+            background: linear-gradient(180deg, var(--bg-gradient-top) 0%, var(--bg-gradient-bottom) 100%);
             min-height: 100vh;
             display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: center;
             padding: 20px;
+            color: var(--text-dark);
+            overflow-x: hidden; /* Prevent cursor causing scroll */
+            
+            /* PARALLAX SETUP */
+            background-size: 120% 120%;
+            background-position: 50% 50%;
+            transition: background-position 0.3s ease;
         }
 
-        /* Language Selection Screen Styling */
+        /* ---------------------------------------------------------
+           DYNAMIC CURSOR STYLES
+           --------------------------------------------------------- */
+        .cursor-dot,
+        .cursor-outline {
+            position: fixed;
+            top: 0;
+            left: 0;
+            transform: translate(-50%, -50%);
+            border-radius: 50%;
+            z-index: 9999;
+            pointer-events: none; /* Crucial: allows clicking through */
+            transition: opacity 0.3s ease, transform 0.1s ease; /* Smooth fades */
+        }
+
+        /* The primary pointer (small dot) */
+        .cursor-dot {
+            width: 8px;
+            height: 8px;
+            /* UPDATED: Using Dark Slate text color for high visibility on white & turquoise */
+            background-color: var(--text-dark); 
+            box-shadow: 0 0 4px rgba(255, 255, 255, 0.4); /* Subtle white glow to help on dark header */
+        }
+
+        /* The trailing ring */
+        .cursor-outline {
+            width: 40px;
+            height: 40px;
+            /* UPDATED: Dark slate ring with transparency */
+            border: 1px solid rgba(45, 55, 72, 0.5); 
+            transition: width 0.2s, height 0.2s, background-color 0.2s, border-color 0.2s; 
+            /* Note: transform is handled by JS for performance */
+        }
+
+        /* Ripple Effect on Click */
+        @keyframes cursorRipple {
+            0% { transform: translate(-50%, -50%) scale(1); opacity: 0.5; }
+            100% { transform: translate(-50%, -50%) scale(2); opacity: 0; }
+        }
+
+        .cursor-outline.clicking {
+            animation: cursorRipple 0.4s ease-out;
+        }
+
+        /* Hover state: When over a clickable element */
+        body.hovering .cursor-outline {
+            width: 60px;
+            height: 60px;
+            /* UPDATED: Faint dark fill on hover */
+            background-color: rgba(45, 55, 72, 0.08); 
+            border-color: transparent;
+        }
+        
+        body.hovering .cursor-dot {
+            opacity: 0.5;
+        }
+
+        /* Restore default cursor for iframes (like the resume) because custom cursors get stuck there */
+        iframe {
+            cursor: auto !important;
+        }
+
+        /* MOBILE OVERRIDE: Disable custom cursor on touch devices to prevent bugs */
+        @media (hover: none) and (pointer: coarse) {
+            .cursor-dot, .cursor-outline {
+                display: none !important;
+            }
+            * {
+                cursor: auto !important;
+            }
+        }
+
+        /* ---------------------------------------------------------
+           EXISTING STYLES
+           --------------------------------------------------------- */
+
+        /* * COMPONENT: LANGUAGE SCREEN
+         * Clean, frosted glass effect
+         */
         .language-selection-screen {
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            height: 100vh; /* Take full viewport height */
             width: 100%;
             max-width: 450px;
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(10px);
-            border-radius: 20px;
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
-            animation: slideUp 0.6s ease-out;
-            padding: 30px;
+            background: white;
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-soft);
+            padding: 40px 30px;
             text-align: center;
+            animation: fadeInUp 0.6s ease-out;
         }
 
         .language-selection-screen h1 {
-            font-size: 1.8em;
-            color: #333;
-            margin-bottom: 30px;
-            font-weight: 600;
+            font-size: 1.5rem;
+            color: var(--text-dark);
+            margin-bottom: 35px;
+            font-weight: 700;
+            line-height: 1.4;
         }
 
         .language-button {
-            padding: 15px 30px;
-            margin: 10px 0;
-            width: 80%; /* Make buttons take more width */
-            max-width: 250px; /* Limit max width */
-            border: none;
-            border-radius: 25px;
+            padding: 16px 0;
+            margin: 8px 0;
+            width: 100%;
+            border: 1px solid #e2e8f0;
+            background: white;
+            color: var(--text-dark);
+            border-radius: var(--radius-md);
             font-size: 1.1em;
-            font-weight: bold;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-        }
-
-        .language-button.english {
-            background: linear-gradient(45deg, #4CAF50, #8BC34A);
-            color: white;
-        }
-
-        .language-button.japanese {
-            background: linear-gradient(45deg, #FFC107, #FF9800);
-            color: white;
+            font-weight: 600;
+            cursor: pointer; /* JS will handle custom cursor hover */
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
         }
 
         .language-button:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+            background: #f7fafc;
+            border-color: var(--primary-blue);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
         }
 
-        /* Chat Container Styling */
+        /* * COMPONENT: CHAT CONTAINER
+         * The main app shell
+         */
         .chat-container {
-            max-width: 450px;
+            max-width: 480px;
             width: 100%;
-            min-height: 600px;
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(10px);
-            border-radius: 20px;
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            height: 700px; /* Fixed height for consistency */
+            max-height: 90vh;
+            background: white;
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-soft);
             display: flex;
             flex-direction: column;
             overflow: hidden;
-            margin-bottom: 40px;
-            display: none; /* Initially hidden */
-        }
-
-        /* Chat Header Styling */
-        .chat-header {
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            color: white;
-            padding: 20px;
-            text-align: center;
-            border-radius: 20px 20px 0 0;
+            /* Initially hidden via JS until language selected */
+            display: none; 
             position: relative;
         }
-        .profile-pic {
-            width: 80px;
-            height: 80px;
-            border-radius: 50%;
-            margin: 0 auto 10px;
-            border: 3px solid white;
-            background: white;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            overflow: hidden;
-            transition: opacity 0.3s ease-in-out;
-        }
-        .profile-pic img {
-            width: 100%;
-            height: 100%;
-            border-radius: 50%;
-            object-fit: cover;
-            object-position: 50% 10%; /* Adjusted to show the face even better */
-        }
-        .profile-pic .avatar-fallback {
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            display: flex;
-            align-items: center;
-            justify-content: center;
+
+        /* * COMPONENT: HEADER
+         * Professional dark theme
+         */
+        .chat-header {
+            background: linear-gradient(135deg, var(--header-gradient-start), var(--header-gradient-end));
             color: white;
-            font-size: 24px;
-            font-weight: bold;
-            border-radius: 50%;
-        }
-        .chat-title {
-            font-size: 18px;
-            font-weight: 600;
-            margin-bottom: 5px;
-            transition: opacity 0.3s ease-in-out;
-        }
-        .chat-subtitle {
-            font-size: 12px;
-            opacity: 0.9;
-            transition: opacity 0.3s ease-in-out;
+            padding: 25px 20px;
+            text-align: center;
+            flex-shrink: 0;
         }
 
-        /* Video Overlay Styling */
-        .welcome-video-overlay {
+        /* The Avatar Container - Holds the looping video */
+        .profile-container {
+            width: 85px;
+            height: 85px;
+            margin: 0 auto 15px;
+            border-radius: 50%;
+            
+            /* GOLD & GLOW EFFECT UPDATE */
+            border: 3px solid var(--gold-shiny);
+            padding: 3px; 
+            position: relative;
+            transition: transform 0.3s ease;
+            
+            /* Animation for the glow from behind */
+            animation: goldPulse 3s infinite ease-in-out;
+        }
+
+        /* Gold Glow & Breathing Animation */
+        @keyframes goldPulse {
+            0% {
+                box-shadow: 0 0 5px rgba(255, 215, 0, 0.3);
+                border-color: #dbb904; /* Darker gold */
+                transform: scale(1);
+            }
+            50% {
+                box-shadow: 0 0 25px rgba(255, 215, 0, 0.8); /* Strong glow */
+                border-color: #ffe34d; /* Brighter gold */
+                transform: scale(1.02);
+            }
+            100% {
+                box-shadow: 0 0 5px rgba(255, 215, 0, 0.3);
+                border-color: #dbb904;
+                transform: scale(1);
+            }
+        }
+
+        /* Subtle interaction on avatar hover - Overrides pulse */
+        .profile-container:hover {
+            transform: scale(1.08);
+            transition: transform 0.3s ease;
+            animation: none; /* Pause pulsing on hover */
+            box-shadow: 0 0 30px rgba(255, 215, 0, 0.9);
+            border-color: #ffe34d;
+        }
+
+        .profile-media {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            overflow: hidden;
+            background: #000;
+            position: relative;
+        }
+
+        /* Use object-fit to ensure video covers the circle perfectly */
+        .profile-media video, 
+        .profile-media img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+
+        /* Fallback image is hidden by default if video loads */
+        .avatar-fallback-img {
             position: absolute;
             top: 0;
             left: 0;
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            border-radius: 20px 20px 0 0;
-            z-index: 7;
-            opacity: 0;
-            transition: opacity 0.5s ease-in-out;
-            pointer-events: none;
+            z-index: 1; /* Behind video */
+        }
+        
+        .avatar-video {
+            position: absolute;
+            top: 0;
+            left: 0;
+            z-index: 2; /* On top */
         }
 
-        .welcome-video-overlay.visible {
-            opacity: 1;
-            pointer-events: auto;
+        .chat-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            margin-bottom: 4px;
         }
 
-        /* Styling to hide header elements when video is playing */
-        .chat-header.video-active .profile-pic,
-        .chat-header.video-active .chat-title,
-        .chat-header.video-active .chat-subtitle {
-            opacity: 0;
-            pointer-events: none;
+        .chat-subtitle {
+            font-size: 0.85rem;
+            opacity: 0.8;
+            font-weight: 400;
         }
 
-
-        /* Chat Messages Area */
+        /* * COMPONENT: MESSAGES
+         */
         .chat-messages {
             flex: 1;
             padding: 20px;
             overflow-y: auto;
             display: flex;
             flex-direction: column;
-            gap: 15px;
+            gap: 16px;
+            background-color: #fff;
+            scroll-behavior: smooth; /* Smooth scrolling */
         }
+
         .message {
-            max-width: 80%;
-            padding: 12px 16px;
+            max-width: 85%;
+            padding: 14px 18px;
             border-radius: 18px;
-            word-wrap: break-word;
+            font-size: 0.95rem;
+            line-height: 1.5;
+            position: relative;
             animation: messageSlide 0.3s ease-out;
         }
+
         .message.bot {
-            background: #f0f0f0;
-            color: #333;
+            background: #f1f5f9; /* Light slate gray */
+            color: var(--text-dark);
             align-self: flex-start;
             border-bottom-left-radius: 4px;
         }
+
         .message.user {
-            background: linear-gradient(135deg, #667eea, #764ba2);
+            background: linear-gradient(135deg, var(--primary-blue), var(--primary-blue-dark));
             color: white;
             align-self: flex-end;
             border-bottom-right-radius: 4px;
-        }
-        /* Resume Iframe Styling */
-        .message.bot .resume-embed {
-            width: 100%;
-            height: 400px;
-            border: 1px solid #ddd;
-            border-radius: 10px;
-            margin-top: 10px;
+            box-shadow: 0 2px 5px rgba(66, 153, 225, 0.3);
         }
 
+        .message-time {
+            font-size: 0.7rem;
+            margin-top: 6px;
+            opacity: 0.6;
+            display: block;
+        }
+        .message.user .message-time { text-align: right; color: rgba(255,255,255,0.9); }
 
-        /* Typing Indicator */
-        .typing-indicator {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            padding: 12px 16px;
-            background: #f0f0f0;
-            border-radius: 18px;
-            border-bottom-left-radius: 4px;
-            max-width: 80px;
-            align-self: flex-start;
-        }
-        .typing-dots {
-            display: flex;
-            gap: 3px;
-        }
-        .typing-dots span {
-            width: 6px;
-            height: 6px;
-            border-radius: 50%;
-            background: #999;
-            animation: typing 1.4s infinite;
-        }
-        .typing-dots span:nth-child(2) {
-            animation-delay: 0.2s;
-        }
-        .typing-dots span:nth-child(3) {
-            animation-delay: 0.4s;
-        }
-
-        /* Chat Input Area */
+        /* * COMPONENT: INPUT AREA & QUICK REPLIES
+         */
         .chat-input-container {
             padding: 20px;
-            border-top: 1px solid #e0e0e0;
+            border-top: 1px solid #edf2f7;
             background: white;
-            border-radius: 0 0 20px 20px;
         }
-        .chat-input-wrapper {
-            display: flex;
+
+        /* Grid Layout for Buttons - Enterprise Requirement */
+        .quick-replies {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr); /* 2 columns equal width */
             gap: 10px;
-            align-items: flex-end;
+            margin-bottom: 15px;
+            width: 100%;
         }
+
+        .quick-reply {
+            padding: 12px 10px;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            cursor: pointer; /* JS will handle custom cursor hover */
+            transition: all 0.2s ease;
+            text-align: center;
+            border: 1px solid transparent;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+        }
+
+        /* Primary Actions (Blue Gradient) */
+        .quick-reply.primary {
+            background: linear-gradient(135deg, var(--primary-blue), var(--primary-blue-dark));
+            color: white;
+            border: none;
+        }
+
+        /* Secondary Actions (White with Blue Border) */
+        .quick-reply.secondary {
+            background: white;
+            border: 1px solid var(--primary-blue);
+            color: var(--primary-blue);
+        }
+
+        /* Exit/Neutral Actions */
+        .quick-reply.neutral {
+            background: #edf2f7;
+            color: var(--text-light);
+            border: 1px solid #e2e8f0;
+        }
+
+        .quick-reply:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        /* Input Field Wrapper */
+        .input-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: #f7fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 30px;
+            padding: 5px 5px 5px 20px;
+            transition: border-color 0.2s;
+        }
+
+        .input-wrapper:focus-within {
+            border-color: var(--primary-blue);
+            background: white;
+            box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.1);
+        }
+
         .chat-input {
             flex: 1;
-            padding: 12px 16px;
-            border: 2px solid #e0e0e0;
-            border-radius: 20px;
-            font-size: 14px;
+            border: none;
+            background: transparent;
+            font-size: 0.95rem;
+            padding: 8px 0;
+            outline: none;
             resize: none;
             max-height: 100px;
-            min-height: 40px;
-            line-height: 1.4;
             font-family: inherit;
-            transition: border-color 0.2s ease-in-out;
         }
-        .chat-input:focus {
-            outline: none;
-            border-color: #667eea;
-        }
+
         .send-btn {
             width: 40px;
             height: 40px;
-            border: none;
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            color: white;
             border-radius: 50%;
-            cursor: pointer;
+            background: var(--primary-blue);
+            color: white;
+            border: none;
             display: flex;
             align-items: center;
             justify-content: center;
-            transition: transform 0.2s, background-color 0.2s;
+            cursor: pointer; /* JS will handle custom cursor hover */
+            transition: transform 0.2s, background 0.2s;
         }
+
         .send-btn:hover {
-            transform: scale(1.1);
+            background: var(--primary-blue-dark);
+            transform: scale(1.05);
         }
+        
         .send-btn:disabled {
-            opacity: 0.5;
+            background: #cbd5e0;
             cursor: not-allowed;
-            transform: none;
-            background: #ccc;
         }
 
-        /* Quick Replies */
-        .quick-replies {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 8px;
-            margin-top: 10px;
-        }
-        .quick-reply {
-            padding: 8px 12px;
-            background: white;
-            border: 2px solid #667eea;
-            color: #667eea;
-            border-radius: 15px;
-            font-size: 12px;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-        .quick-reply:hover {
-            background: #667eea;
-            color: white;
-        }
-
-        /* Message Form Styles */
+        /* * FORMS & UTILITIES 
+         */
         .message-form {
-            flex: 1;
             padding: 20px;
-            background: white;
-            border-radius: 0 0 20px 20px;
-            border-top: 1px solid #e0e0e0;
             overflow-y: auto;
+            background: #fff;
         }
-        .form-group {
-            margin-bottom: 15px;
-        }
+        
+        .form-group { margin-bottom: 15px; }
+        
         .form-label {
             display: block;
-            margin-bottom: 5px;
+            margin-bottom: 6px;
+            font-size: 0.85rem;
             font-weight: 600;
-            color: #333;
-            font-size: 14px;
+            color: var(--text-dark);
         }
+        
         .form-input {
             width: 100%;
-            padding: 10px 12px;
-            border: 2px solid #e0e0e0;
+            padding: 12px;
+            border: 1px solid #e2e8f0;
             border-radius: 8px;
-            font-size: 14px;
+            font-size: 0.95rem;
             font-family: inherit;
-            transition: border-color 0.2s ease-in-out;
+            transition: border 0.2s;
         }
+        
         .form-input:focus {
+            border-color: var(--primary-blue);
             outline: none;
-            border-color: #667eea;
-        }
-        .form-textarea {
-            min-height: 80px;
-            resize: vertical;
-        }
-        .form-submit-group {
-            display: flex;
-            gap: 10px;
-            margin-top: 20px;
-        }
-        .form-submit {
-            flex: 1;
-            padding: 12px;
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            color: white;
-            border: none;
-            border-radius: 8px;
-            font-size: 16px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: transform 0.2s, background-color 0.2s;
-        }
-        .form-submit:hover {
-            transform: translateY(-2px);
-        }
-        .form-submit:disabled {
-            opacity: 0.6;
-            cursor: not-allowed;
-            transform: none;
-            background: #ccc;
-        }
-        .generate-draft-btn {
-            flex: 1;
-            padding: 12px;
-            background: #f0f0f0;
-            color: #667eea;
-            border: 2px solid #667eea;
-            border-radius: 8px;
-            font-size: 16px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: transform 0.2s, background-color 0.2s;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-        }
-        .generate-draft-btn:hover {
-            transform: translateY(-2px);
-            background: #e0e0e0;
-        }
-        .generate-draft-btn:disabled {
-            opacity: 0.6;
-            cursor: not-allowed;
-            transform: none;
-            background: #ccc;
-            color: #666;
-            border-color: #999;
         }
 
-        /* Animations */
-        @keyframes slideUp {
-            from {
-                opacity: 0;
-                transform: translateY(30px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
+        .btn-block {
+            width: 100%;
+            padding: 12px;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer; /* JS will handle custom cursor hover */
+            border: none;
+            transition: transform 0.1s;
         }
-        @keyframes messageSlide {
-            from {
-                opacity: 0;
-                transform: translateY(10px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary-blue), var(--primary-blue-dark));
+            color: white;
         }
-        @keyframes typing {
-            0%, 60%, 100% {
-                transform: translateY(0);
-            }
-            30% {
-                transform: translateY(-8px);
-            }
+
+        .btn-secondary {
+            background: #f7fafc;
+            color: var(--primary-blue);
+            border: 1px solid #cbd5e0;
+        }
+
+        /* Typing Indicator */
+        .typing-indicator {
+            padding: 15px;
+            background: #f1f5f9;
+            border-radius: 18px;
+            border-bottom-left-radius: 4px;
+            width: fit-content;
+            margin-bottom: 15px;
+            display: none; /* toggled via JS */
+        }
+        .dots { display: flex; gap: 4px; }
+        .dot {
+            width: 8px; height: 8px; background: #cbd5e0; border-radius: 50%;
+            animation: bounce 1.4s infinite ease-in-out both;
+        }
+        .dot:nth-child(1) { animation-delay: -0.32s; }
+        .dot:nth-child(2) { animation-delay: -0.16s; }
+
+        /* Resume Embed */
+        .resume-frame {
+            width: 100%;
+            height: 350px;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            margin-top: 10px;
+            background: #f8f9fa;
         }
 
         /* Utility Classes */
-        .hidden {
-            display: none !important;
+        .hidden { display: none !important; }
+        .fade-in { animation: fadeInUp 0.4s ease-out; }
+
+        /* * MOBILE RESPONSIVENESS
+         */
+        @media (max-width: 768px) {
+            body {
+                padding: 0;
+                background: var(--bg-gradient-top); /* Flat color usually better on mobile */
+            }
+            
+            .chat-container {
+                height: 100vh;
+                max-height: 100vh;
+                max-width: 100%;
+                border-radius: 0;
+                box-shadow: none;
+            }
+
+            /* Stack buttons vertically on mobile as requested */
+            .quick-replies {
+                grid-template-columns: 1fr; 
+                gap: 8px;
+            }
+
+            .quick-reply {
+                padding: 14px; /* Larger touch target */
+                font-size: 1rem;
+            }
+
+            .chat-header {
+                padding: 15px;
+            }
+            
+            .profile-container {
+                width: 70px;
+                height: 70px;
+            }
         }
 
-        /* Scrollbar Styling */
-        .chat-messages::-webkit-scrollbar,
-        .message-form::-webkit-scrollbar {
-            width: 4px;
-        }
-        .chat-messages::-webkit-scrollbar-track,
-        .message-form::-webkit-scrollbar-track {
-            background: transparent;
-        }
-        .chat-messages::-webkit-scrollbar-thumb,
-        .message-form::-webkit-scrollbar-thumb {
-            background: #ccc;
-            border-radius: 2px;
-        }
+        /* Keyframes */
+        @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes messageSlide { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes bounce { 0%, 80%, 100% { transform: scale(0); } 40% { transform: scale(1); } }
 
-        /* Language Toggle Button (inside chat, now hidden by default) */
-        .language-toggle {
-            position: absolute;
-            top: 10px;
-            right: 10px;
-            background: rgba(255, 255, 255, 0.2);
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            color: white;
-            padding: 5px 10px;
-            border-radius: 15px;
-            font-size: 12px;
-            cursor: pointer;
-            z-index: 10;
-            display: none; /* Hide this button as initial language choice is handled by other buttons */
-        }
-
-        /* Message Timestamp */
-        .message-time {
-            font-size: 10px;
-            opacity: 0.7;
-            margin-top: 4px;
-            text-align: right;
-        }
-        .message.bot .message-time {
-            text-align: left;
-        }
-
-        /* Close Notice (for form submission success) */
-        .close-notice {
-            background: #e8f5e8;
-            color: #2d5a2d;
-            padding: 10px;
-            border-radius: 8px;
-            margin-top: 10px;
-            font-size: 12px;
-            text-align: center;
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-        }
-
-        .close-notice .email-content-display {
-            background: #f9f9f9;
-            border: 1px solid #e0e0e0;
-            padding: 10px;
-            border-radius: 5px;
-            text-align: left;
-            font-family: monospace;
-            font-size: 12px;
-            white-space: pre-wrap;
-            word-break: break-word;
-            max-height: 150px;
-            overflow-y: auto;
-        }
-
-        .close-notice .copy-btn {
-            background: #667eea;
-            color: white;
-            border: none;
-            padding: 8px 15px;
-            border-radius: 5px;
-            cursor: pointer;
-            font-size: 14px;
-            transition: background-color 0.2s;
-        }
-        .close-notice .copy-btn:hover {
-            background: #764ba2;
-        }
-
-        /* Star Rating Styles */
-        .chat-rating-container {
-            padding: 20px;
-            background: white;
-            border-top: 1px solid #e0e0e0;
-            text-align: center;
-            border-radius: 0 0 20px 20px;
-        }
-        .rating-prompt {
-            font-size: 14px;
-            color: #333;
-            margin-bottom: 10px;
-        }
-        .stars {
-            display: flex;
-            justify-content: center;
-            gap: 5px;
-            margin-bottom: 10px;
-        }
-        .star {
-            width: 30px;
-            height: 30px;
-            color: #ccc;
-            cursor: pointer;
-            transition: color 0.2s ease-in-out, transform 0.1s ease-out;
-        }
-        .star:hover {
-            transform: scale(1.1);
-        }
-        .star.selected {
-            color: #FFD700;
-        }
-        .rating-thank-you {
-            font-size: 12px;
-            color: #2d5a2d;
-            margin-top: 10px;
-        }
-
-        /* Creator Signature Styles */
-        .creator-signature {
-            font-size: 10px;
-            color: #888;
-            text-align: center;
-            padding: 10px;
-            border-top: 1px solid #e0e0e0;
-            background: white;
-            border-radius: 0 0 20px 20px;
-            margin-top: auto;
-        }
     </style>
 </head>
 <body>
+
+    <!-- Dynamic Cursor Elements -->
+    <div class="cursor-dot" id="cursorDot"></div>
+    <div class="cursor-outline" id="cursorOutline"></div>
+
+    <!-- Language Selection Screen -->
     <div class="language-selection-screen" id="languageSelectionScreen">
-        <h1>Select your language /<br>言語を選択してください</h1>
-        <button class="language-button english" data-lang="en">English</button>
-        <button class="language-button japanese" data-lang="ja">日本語</button>
+        <h1>Select Language<br><span style="font-size: 0.8em; font-weight: normal; color: #718096;">言語を選択してください</span></h1>
+        <button class="language-button" onclick="app.setLanguage('en')">
+            <span>🇺🇸</span> English
+        </button>
+        <button class="language-button" onclick="app.setLanguage('ja')">
+            <span>🇯🇵</span> 日本語
+        </button>
     </div>
 
+    <!-- Main Chat Application -->
     <div class="chat-container" id="chatContainer">
+        
+        <!-- Header with Looping Avatar -->
         <div class="chat-header">
-            <div class="profile-pic" id="profilePicContainer">
-                <img src="https://i.imgur.com/ThRrtS2.jpeg" alt="AI Assistant" onerror="this.style.display='none'; document.getElementById('avatarFallback').style.display='flex';">
-                <div class="avatar-fallback" id="avatarFallback" style="display: none;">🤖</div>
+            <div class="profile-container">
+                <div class="profile-media">
+                    <video 
+                        id="avatarVideo"
+                        class="avatar-video"
+                        src="https://gomesroger.github.io/roger-ai-assets/New_Avatar_Of_Roger.webm" 
+                        autoplay loop muted playsinline
+                        poster="https://i.imgur.com/ThRrtS2.jpeg"
+                        onerror="this.style.display='none'; document.getElementById('avatarFallback').style.display='block';">
+                    </video>
+                    <!-- Fallback shows only if video fails -->
+                    <img id="avatarFallback" src="https://i.imgur.com/ThRrtS2.jpeg" alt="Roger Gomes" 
+                         style="display: none; width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">
+                </div>
             </div>
             <div class="chat-title">Roger's AI Assistant</div>
-            <div class="chat-subtitle">ロジャーのAIアシスタント</div>
-            <video id="welcomeVideoPlayer" class="welcome-video-overlay" autoplay playsinline preload="auto"></video>
+            <div class="chat-subtitle"></div>
         </div>
-        <div class="chat-messages" id="chatMessages" role="log" aria-live="polite">
-            </div>
-        <div class="chat-input-container" id="chatInputContainer">
-            <div id="quickReplies" class="quick-replies hidden">
-                </div>
-            <div class="chat-input-wrapper">
-                <textarea
-                    id="chatInput"
-                    class="chat-input"
-                    placeholder="Type your message..."
-                    rows="1"
-                ></textarea>
-                <button id="sendBtn" class="send-btn" title="Send message">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-                        <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
-                    </svg>
+
+        <!-- Chat History Area -->
+        <div class="chat-messages" id="chatMessages">
+            <!-- Messages injected via JS -->
+        </div>
+
+        <!-- Typing Indicator (Hidden by default) -->
+        <div class="typing-indicator" id="typingIndicator">
+            <div class="dots"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>
+        </div>
+
+        <!-- Quick Replies & Input Area -->
+        <div class="chat-input-container" id="inputArea">
+            <!-- Grid Buttons -->
+            <div class="quick-replies hidden" id="quickReplies"></div>
+            
+            <!-- Text Input -->
+            <div class="input-wrapper">
+                <textarea id="chatInput" class="chat-input" rows="1" placeholder="Type a message..."></textarea>
+                <button id="sendBtn" class="send-btn">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
                 </button>
             </div>
         </div>
-        <div class="message-form hidden" id="messageForm">
-            <form>
-                <div class="form-group">
-                    <label class="form-label" id="nameLabel">Your Name:</label>
-                    <input type="text" id="formName" class="form-input" required>
-                </div>
-                <div class="form-group">
-                    <label class="form-label" id="companyLabel">Company:</label>
-                    <input type="text" id="formCompany" class="form-input" required>
-                </div>
-                <div class="form-group">
-                    <label class="form-label" id="emailLabel">Email:</label>
-                    <input type="email" id="formEmail" class="form-input" required>
-                </div>
-                <div class="form-group">
-                    <label class="form-label" id="messageLabel">Message for Roger:</label>
-                    <textarea id="formMessage" class="form-input form-textarea" required></textarea>
-                </div>
-                <div class="form-submit-group">
-                    <button type="button" class="generate-draft-btn" id="generateDraftBtn">
-                        ✨ <span id="generateDraftBtnText">Draft Message</span>
-                    </button>
-                    <button type="submit" class="form-submit" id="submitBtn">Send Message</button>
-                </div>
-                <div class="close-notice hidden" id="closeNotice">
-                    <p id="closeNoticeText"></p>
-                </div>
-            </form>
-        </div>
-        <div class="chat-rating-container hidden" id="chatRatingContainer">
-            <p id="ratingPrompt" class="rating-prompt"></p>
-            <div class="stars" id="starRating">
-                <svg class="star" data-value="1" viewBox="0 0 24 24" fill="currentColor"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
-                <svg class="star" data-value="2" viewBox="0 0 24 24" fill="currentColor"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
-                <svg class="star" data-value="3" viewBox="0 0 24 24" fill="currentColor"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
-                <svg class="star" data-value="4" viewBox="0 0 24 24" fill="currentColor"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
-                <svg class="star" data-value="5" viewBox="0 0 24 24" fill="currentColor"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
+
+        <!-- Contact Form (Overlay style) -->
+        <div class="message-form hidden" id="contactForm">
+            <div class="form-group">
+                <label class="form-label" id="lbl_name">Name</label>
+                <input type="text" class="form-input" id="f_name">
             </div>
-            <p id="ratingThankYou" class="rating-thank-you hidden"></p>
+            <div class="form-group">
+                <label class="form-label" id="lbl_company">Company</label>
+                <input type="text" class="form-input" id="f_company">
+            </div>
+            <div class="form-group">
+                <label class="form-label" id="lbl_email">Email</label>
+                <input type="email" class="form-input" id="f_email">
+            </div>
+            <div class="form-group">
+                <label class="form-label" id="lbl_msg">Message</label>
+                <textarea class="form-input" id="f_message" rows="4"></textarea>
+            </div>
+            
+            <div style="display: flex; gap: 10px;">
+                <button class="btn-block btn-secondary" id="btn_draft" onclick="app.generateDraft()">✨ AI Draft</button>
+                <button class="btn-block btn-primary" id="btn_send" onclick="app.submitForm()">Send Message</button>
+            </div>
+            <div id="formStatus" style="margin-top: 10px; text-align: center; font-size: 0.85rem; color: green;"></div>
         </div>
 
-        <div class="creator-signature" id="creatorSignature"></div>
+        <!-- Rating Section -->
+        <div id="ratingSection" class="chat-input-container hidden" style="text-align: center;">
+            <p style="margin-bottom: 10px; color: var(--text-light);">How was your experience?</p>
+            <div style="font-size: 2rem; cursor: pointer;" id="stars">
+                <span data-val="1">★</span><span data-val="2">★</span><span data-val="3">★</span><span data-val="4">★</span><span data-val="5">★</span>
+            </div>
+        </div>
+        
+        <!-- Creator Signature -->
+        <div style="text-align: center; padding: 10px; font-size: 0.75rem; color: #a0aec0;">
+            Built by <a href="https://www.linkedin.com/in/meetrogergomes" target="_blank" style="color: #4299e1; text-decoration: none;">Roger Gomes</a> • v14.0
+        </div>
+
     </div>
 
-
+    <!-- 
+      APPLICATION LOGIC 
+      Refactored for readability and maintenance.
+      Some sections could be optimized further but keeping it simple for now.
+    -->
     <script>
-        // --- Global State Variables ---
-        let currentLanguage = 'en';
-        let conversationStep = 0;
-        let userInfo = {};
-        let isTyping = false;
-        let waitingForScheduleConfirmation = false;
-        let isLeavingMessageDirectly = false;
-        let directMessageSubStep = 0;
-
-        const GOOGLE_APPS_SCRIPT_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbygjlQiVtSYYoQtYOgXl2ES0iauRUsgsakygUYlbC1T1mzeeG54UnT0WD3dO6p2h9zDSg/exec';
-
-        // --- Cached DOM Elements ---
-        let chatMessagesContainer, chatInput, sendButton, quickRepliesContainer,
-            chatInputContainer, messageForm, nameLabel, companyLabel, emailLabel,
-            messageLabel, submitBtn, closeNotice, chatTitleElement, chatSubtitleElement,
-            profilePicImg, avatarFallback, languageToggleButton, generateDraftButton,
-            generateDraftButtonText, chatRatingContainer, ratingPrompt, starRatingContainer, ratingThankYou,
-            closeNoticeText, creatorSignatureElement, welcomeVideoPlayer, chatHeaderElement,
-            languageSelectionScreen, englishButton, japaneseButton, chatContainer;
-
-
-        // --- Localization Data ---
-        const messages = {
+        // TODO: Consider adding session persistence for returning users
+        // Maybe localStorage for draft messages? Low priority for v2.0
+        
+        const GOOGLE_APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbygjlQiVtSYYoQtYOgXl2ES0iauRUsgsakygUYlbC1T1mzeeG54UnT0WD3dO6p2h9zDSg/exec';
+        
+        // Centralized text resources
+        const RESOURCES = {
             en: {
-                welcome: "👋 Hello! I'm Roger's AI assistant. I'm here to connect you with Roger.",
-                intro: "I can help you:\n• Schedule a chat\n• Leave a message\n• Generate Professional Summary\n• Watch Roger's Video\n• View Resume\n• Connect on LinkedIn",
-                askName: "Great! Let's start. What's your name?",
-                askCompany: "Nice to meet you, {name}! What company do you work for?",
-                askPurpose: "Thanks, {name}! What brings you here today? Are you looking to:",
-                professionalSummary: "◎ Strategic GTM leader with 20+ years in B2B, SaaS, AI, and startup growth across APAC & North America, driving global expansion and operational scale.\n\n◎ Led $295M+ total portfolio spanning retail operations ($163M), cross-regional projects ($130M+), and enterprise deals, managing 1000+ employees across multi-state networks while driving 0→1 product launches in tech, civil, and pharma sectors.\n\n◎ Executed $130M+ cross-regional initiatives including $80M+ strategic programs at D.O Co and $50M+ multi-market projects at S&T Co, securing $1.5M enterprise government contracts while boosting operational efficiency by 25% and NPS by 15%.\n\n◎ Built and led high-performing teams of up to 16 members across Japan, Thailand, and Australia; improved CRM adoption by 30% and achieved ¥40M+ revenue uplift during COVID.\n\n◎ Based in Japan (no employer sponsorship required) and open to relocation or fully remote opportunities across global markets.",
-                afterRogerMessage: "Is there anything else I can help you with?\n\nFeel free to use the buttons below to schedule a chat with Roger or leave a message—whichever works best for you!",
-                scheduleConfirm: "Perfect! I'll open Roger's calendar for you. You can schedule a time that works best.",
-                scheduleFollowUp: "Have you finished scheduling your appointment with Roger?",
-                appointmentComplete: "Excellent! Roger will receive your booking confirmation and will be prepared for your meeting. Thank you for connecting with us!",
-                windowClosing: "This window will close automatically in 3 seconds...",
-                messagePrompt: "I'd be happy to help you send a message to Roger. Please fill out the form below:",
-                goodbye: "Thank you for your time! Feel free to reach out anytime.",
-                scheduleStillWorking: "No problem! Please let me know if you are 'done' or are 'still working on it' when you are ready to proceed.",
-                scheduleHelp: "I'm sorry, I didn't understand. Please let me know if you are 'done' or are 'still working on it'.",
-                generalFallback: "I'm sorry, I didn't quite understand what you meant. If you're having trouble typing, you can always choose an option from the buttons below.",
-                formSending: "Sending...",
-                formSent: "Message sent successfully! This window will close in 3 seconds...",
-                formError: "Failed to send message. Please try again or contact Roger directly.",
-                chatTitleMain: "Roger's AI Assistant",
-                chatSubtitleMain: "Connecting you with Roger",
-                inputPlaceholder: "Type your message...",
-                profileAltText: "AI Assistant",
-                generateDraft: "Draft Message",
-                generatingDraft: "Generating...",
-                draftGenerated: "Draft Generated!",
-                rateExperience: "Please rate your experience:",
-                thankYouForFeedback: "Thank You for your feedback!",
-                watchVideo: "Certainly! Here's Roger's video for recruiters: <a href='https://vimeo.com/1090730386/4c50b956d0' target='_blank' rel='noopener noreferrer' class='video-link'>From Paper to Person</a>",
-                viewResume: "Of course. Here is Roger's resume:<br><iframe src='https://drive.google.com/file/d/1dotyuwYDQ2fdn9JzmKlQPvWDYbElngWB/preview' class='resume-embed'></iframe>",
-                linkedinMessage: "Great! Here's a link to Roger's LinkedIn profile: <a href='https://www.linkedin.com/in/meetrogergomes' target='_blank' rel='noopener noreferrer' class='linkedin-link'>linkedin.com/in/meetrogergomes</a>",
-                exitButton: "Exit",
-                creatorSignaturePrefix: "Created by",
-                welcomeVideo: 'https://gomesroger.github.io/roger-ai-assets/Ai%20Assistant%20Video-%20ENG.webm',
-                videoPlaybackError: "Video could not be played. Proceeding with text introduction."
+                welcome: "Hello! I'm Roger's AI Assistant. I'm here to help you connect with Roger efficiently.",
+                menuPrompt: "How can I help you today?",
+                // Updated Kapture App text
+                summary: "◎ Strategic GTM leader with 20+ years in B2B, SaaS, AI, and startup growth across APAC & North America.\n\n◎ Led $295M+ total portfolio spanning retail operations and enterprise deals, managing 1000+ employees.\n\n◎ Currently building KAPTURE APP, an AI recruitment platform reducing hiring time by 85%. Learn more at kaptureapp.io",
+                schedule: "Excellent choice. I've opened Roger's calendar. Please pick a time that works for you.",
+                resume: "Here is Roger's current resume.",
+                linkedin: "You can connect with Roger directly on LinkedIn here: <a href='https://www.linkedin.com/in/meetrogergomes' target='_blank' style='color: #3182ce;'>linkedin.com/in/meetrogergomes</a>",
+                formIntro: "Please fill out the details below to leave a message.",
+                thanks: "Thank you! Your message has been sent successfully.",
+                error: "Something went wrong. Please try again.",
+                ui: {
+                    title: "Roger's AI Assistant",
+                    subtitle: "",
+                    placeholder: "Type your message...",
+                    buttons: ["Schedule a chat", "Leave a message", "Professional Summary", "View Resume", "Connect on LinkedIn", "Exit"],
+                    form: { name: "Your Name", company: "Company", email: "Email", msg: "Message", send: "Send Message", draft: "Draft Message" }
+                }
             },
             ja: {
-                welcome: "👋 こんにちは！私はロジャーのAIアシスタントです。ロジャーとつながるお手伝いをします。",
-                intro: "以下のことをお手伝いできます：\n• チャットを予約\n• メッセージを残す\n• 職歴・スキル概要を作成\n• ロジャーのビデオを見る\n• 履歴書を見る\n• 職務経歴書を見る\n• LinkedInでつながる",
-                askName: "まず、お名前を教えてください。",
-                askCompany: "{name}さん、はじめまして！どちらの会社にお勤めですか？",
-                askPurpose: "{name}さん、ありがとうございます！本日はどのようなご用件でしょうか？",
-                professionalSummary: "◎ 戦略的GTMリーダーとして、APAC・北米市場において20年以上のB2B、SaaS、AI、スタートアップ成長領域での実務経験を有し、グローバル展開と事業運営のスケール化を推進。\n\n◎ 総額295億円超のポートフォリオを牽引し、小売事業（163億円）、地域横断プロジェクト（130億円超）、大型案件を担当。テクノロジー、土木、製薬業界において複数州にわたる1,000名以上の従業員を管理しながら、0→1フェーズのプロダクト立ち上げを実現。\n\n◎ 130億円超の地域横断イニシアティブを実行。D.O社での80億円超の戦略プログラム、S&T社での50億円超のマルチマーケットプロジェクトを含み、150万ドルの大型政府契約を獲得。同時に業務効率を25%向上、NPSを15%改善を達成。\n\n◎ 日本、タイ、オーストラリアを拠点とした最大16名のハイパフォーマンスチームを構築・指揮。CRM導入率を30%向上させ、コロナ禍においては4,000万円超の売上増を実現。\n\n◎ 日本在住（就労ビザスポンサー不要）で、グローバル市場での転居または完全リモート勤務に対応可能。",
-                afterRogerMessage: "他にお手伝いできることはありますか？\n\nロジャーとのチャット予約やメッセージの送信は、下のボタンからお気軽にどうぞ！",
-                scheduleConfirm: "完璧です！ロジャーのカレンダーを開きます。最適な時間を選択してください。",
-                scheduleFollowUp: "ロジャーとのアポイントメントの予約は完了しましたか？",
-                appointmentComplete: "素晴らしい！ロジャーが予約確認を受け取り、ミーティングの準備をいたします。ご連絡いただきありがとうございました！",
-                windowClosing: "このウィンドウは3秒後に自動的に閉じます...",
-                messagePrompt: "ロジャーにメッセージをお送りするお手伝いをいたします。以下のフォームにご記入ください：",
-                goodbye: "お時間をいただき、ありがとうございました！いつでもお気軽にご連絡ください。",
-                scheduleStillWorking: "問題ありません！「完了しました」または「まだ作業中です」のどちらかでお知らせください。",
-                scheduleHelp: "申し訳ありません、理解できませんでした。「完了しました」または「まだ作業中です」のどちらかでお知らせください。",
-                generalFallback: "申し訳ありません、おっしゃっている意味がよく分かりませんでした。もし入力でお困りでしたら、下のボタンからオプションを選んでください。",
-                formSending: "送信中...",
-                formSent: "メッセージが正常に送信されました！このウィンドウは3秒後に閉じます...",
-                formError: "メッセージの送信に失敗しました。もう一度お試しいただくか、直接ロジャーにご連絡ください。",
-                chatTitleMain: "Roger's AIアシスタント",
-                chatSubtitleMain: "ロジャーとのご連絡をお手伝いします",
-                inputPlaceholder: "メッセージを入力...",
-                profileAltText: "AIアシスタント",
-                generateDraft: "メッセージ下書き生成",
-                generatingDraft: "生成中...",
-                draftGenerated: "下書きを生成しました！",
-                rateExperience: "体験はいかがでしたか？",
-                thankYouForFeedback: "フィードバックありがとうございます！",
-                watchVideo: "はい、承知いたしました。採用担当者向けのロジャーのビデオはこちらです：<a href='https://vimeo.com/1090731598/b065f49f38' target='_blank' rel='noopener noreferrer' class='video-link'>簡単なご挨拶</a>",
-                viewRirekisho: "はい、承知いたしました。ロジャーの履歴書です：<br><iframe src='https://drive.google.com/file/d/1xCcKF-MIK3BRbHdWX_j7B6u1qjJ_osrX/preview' class='resume-embed'></iframe>",
-                viewShokumuKeirekisho: "はい、承知いたしました。ロジャーの職務経歴書です：<br><iframe src='https://drive.google.com/file/d/1jRdu6uPBrGKT0ctRrdmGWLW_-QI52fJj/preview' class='resume-embed'></iframe>",
-                linkedinMessage: "はい、承知いたしました。ロジャーのLinkedInプロフィールはこちらです：<a href='https://www.linkedin.com/in/meetrogergomes' target='_blank' rel='noopener noreferrer' class='linkedin-link'>linkedin.com/in/meetrogergomes</a>",
-                exitButton: "終了",
-                creatorSignaturePrefix: "作成者：",
-                welcomeVideo: 'https://gomesroger.github.io/roger-ai-assets/Ai%20Assistant%20Video-%20JPN.webm', 
-                videoPlaybackError: "動画を再生できませんでした。テキストでの導入に進みます。"
+                welcome: "こんにちは！ロジャーのAIアシスタントです。ロジャーとの連絡をサポートします。",
+                menuPrompt: "本日はどのようなご用件でしょうか？",
+                // Updated Kapture App text
+                summary: "◎ 戦略的GTMリーダーとして、APAC・北米市場において20年以上の実績を持ち、総額295億円超のポートフォリオを牽引。\n\n◎ 現在、採用期間を85%短縮するAI採用プラットフォーム「KAPTURE APP」を開発中。詳細: kaptureapp.jp",
+                schedule: "承知しました。ロジャーのカレンダーを開きます。ご都合の良い日時をお選びください。",
+                resume: "ロジャーの履歴書はこちらです。",
+                linkedin: "LinkedInでのご連絡はこちらから: <a href='https://www.linkedin.com/in/meetrogergomes' target='_blank' style='color: #3182ce;'>linkedin.com/in/meetrogergomes</a>",
+                formIntro: "以下のフォームにメッセージをご記入ください。",
+                thanks: "ありがとうございます！メッセージを送信しました。",
+                error: "エラーが発生しました。もう一度お試しください。",
+                ui: {
+                    title: "Roger's AIアシスタント",
+                    subtitle: "",
+                    placeholder: "メッセージを入力...",
+                    // Japanese button order customized
+                    buttons: ["チャットを予約", "メッセージを残す", "職歴・スキル概要", "履歴書を見る", "職務経歴書を見る", "LinkedIn", "終了"],
+                    form: { name: "お名前", company: "会社名", email: "メールアドレス", msg: "メッセージ", send: "送信", draft: "下書き生成" }
+                }
             }
         };
 
-        const quickRepliesData = {
-            en: {
-                start: ["Schedule a chat", "Leave a message", "Generate Professional Summary", "Watch Roger's Video", "View Resume", "Connect on LinkedIn", "Exit"],
-                purpose: ["Schedule a chat", "Leave a message", "Generate Professional Summary", "Watch Roger's Video", "View Resume", "Connect on LinkedIn", "Exit"],
-                scheduleConfirm: ["Yes, I'm done", "Still working on it"],
-            },
-            ja: {
-                start: ["チャットを予約", "メッセージを残す", "職歴・スキル概要を作成", "ロジャーのビデオを見る", "履歴書を見る", "職務経歴書を見る", "LinkedInでつながる", "終了"],
-                purpose: ["チャットを予約", "メッセージを残す", "職歴・スキル概要を作成", "ロジャーのビデオを見る", "履歴書を見る", "職務経歴書を見る", "LinkedInでつながる", "終了"],
-                scheduleConfirm: ["はい、完了しました", "まだ作業中です"],
-            }
-        };
-
-        const formLabelsData = {
-            en: {
-                name: "Your Name:",
-                company: "Company:",
-                email: "Email:",
-                message: "Message for Roger:",
-                submit: "Send Message"
-            },
-            ja: {
-                name: "お名前:",
-                company: "会社名:",
-                email: "メールアドレス:",
-                message: "ロジャーへのメッセージ:",
-                submit: "メッセージを送信"
-            }
-        };
-
-        // --- Initialization ---
-        document.addEventListener('DOMContentLoaded', function() {
-            cacheDOMElements();
-            initializeEventListeners();
-            // Initially, only show the language selection screen
-            languageSelectionScreen.style.display = 'flex';
-            chatContainer.style.display = 'none'; // Ensure chat is hidden
-        });
-
         /**
-         * Caches references to frequently used DOM elements.
+         * Dynamic Cursor Controller
+         * Handles the movement and states of the custom cursor.
          */
-        function cacheDOMElements() {
-            languageSelectionScreen = document.getElementById('languageSelectionScreen');
-            englishButton = document.querySelector('.language-button.english');
-            japaneseButton = document.querySelector('.language-button.japanese');
-            chatContainer = document.getElementById('chatContainer');
-
-            chatMessagesContainer = document.getElementById('chatMessages');
-            chatInput = document.getElementById('chatInput');
-            sendButton = document.getElementById('sendBtn');
-            quickRepliesContainer = document.getElementById('quickReplies');
-            chatInputContainer = document.getElementById('chatInputContainer');
-            messageForm = document.getElementById('messageForm');
-            nameLabel = document.getElementById('nameLabel');
-            companyLabel = document.getElementById('companyLabel');
-            emailLabel = document.getElementById('emailLabel');
-            messageLabel = document.getElementById('messageLabel');
-            submitBtn = document.getElementById('submitBtn');
-            closeNotice = document.getElementById('closeNotice');
-            chatTitleElement = document.querySelector('.chat-title');
-            chatSubtitleElement = document.querySelector('.chat-subtitle');
-            profilePicImg = document.querySelector('.profile-pic img');
-            avatarFallback = document.getElementById('avatarFallback');
-            generateDraftButton = document.getElementById('generateDraftBtn');
-            generateDraftButtonText = document.getElementById('generateDraftBtnText');
-            chatRatingContainer = document.getElementById('chatRatingContainer');
-            ratingPrompt = document.getElementById('ratingPrompt');
-            starRatingContainer = document.getElementById('starRating');
-            ratingThankYou = document.getElementById('ratingThankYou');
-            closeNoticeText = document.getElementById('closeNoticeText');
-            creatorSignatureElement = document.getElementById('creatorSignature');
-            welcomeVideoPlayer = document.getElementById('welcomeVideoPlayer');
-            chatHeaderElement = document.querySelector('.chat-header');
-        }
-
-        /**
-         * Initializes all necessary event listeners for interactive elements.
-         */
-        function initializeEventListeners() {
-            englishButton.addEventListener('click', () => selectLanguage('en'));
-            japaneseButton.addEventListener('click', () => selectLanguage('ja'));
-
-            chatInput.addEventListener('input', autoResizeTextarea);
-            chatInput.addEventListener('keydown', handleInputKeydown);
-            sendButton.addEventListener('click', sendMessage);
-            document.querySelector('#messageForm form').addEventListener('submit', submitMessageForm);
-            generateDraftButton.addEventListener('click', generateMessageDraft);
-            starRatingContainer.addEventListener('click', handleStarRatingClick);
-            starRatingContainer.addEventListener('mouseover', handleStarRatingHover);
-            starRatingContainer.addEventListener('mouseout', handleStarRatingOut);
-        }
-
-        /**
-         * Handles language selection from the initial screen.
-         */
-        function selectLanguage(lang) {
-            console.log(`Language selected: ${lang}`);
-            currentLanguage = lang;
-            languageSelectionScreen.style.display = 'none';
-            chatContainer.style.display = 'flex'; // Show the chat container
-            updateUIForLanguage();
-            startConversation(); // Start the chat flow with the chosen language's video
-        }
-
-        /**
-         * Automatically adjusts the height of the textarea based on its content.
-         */
-        function autoResizeTextarea() {
-            this.style.height = 'auto';
-            this.style.height = this.scrollHeight + 'px';
-        }
-
-        /**
-         * Handles keydown events in the chat input, specifically for sending messages with Enter.
-         */
-        function handleInputKeydown(e) {
-            if (e.key === 'Enter' && !e.shiftKey) {
-                e.preventDefault();
-                sendMessage();
-            }
-        }
-
-        // --- Core Chat Logic ---
-
-        /**
-         * Starts or restarts the conversation flow.
-         */
-        function startConversation() {
-            console.log("startConversation called. Resetting state.");
-            conversationStep = 0;
-            userInfo = {};
-            waitingForScheduleConfirmation = false;
-            isTyping = false;
-            isLeavingMessageDirectly = false;
-            directMessageSubStep = 0;
-
-            chatMessagesContainer.innerHTML = '';
-            hideQuickReplies();
-            chatInputContainer.classList.remove('hidden');
-            messageForm.classList.add('hidden');
-            closeNotice.classList.add('hidden');
-            chatRatingContainer.classList.add('hidden');
-            resetStars();
-
-            chatHeaderElement.classList.remove('video-active');
-
-            // Play the welcome video first after language selection
-            playWelcomeVideo();
-        }
-
-        /**
-         * Plays the welcome video based on the current language.
-         * Transitions to text introduction after video ends or fails to autoplay.
-         */
-        function playWelcomeVideo() {
-            if (!welcomeVideoPlayer) {
-                console.error("playWelcomeVideo: Welcome video player element not found. Skipping video playback.");
-                startTextIntroduction();
-                return;
-            }
-
-            const videoSrc = messages[currentLanguage].welcomeVideo;
-            console.log(`playWelcomeVideo: Attempting to play video for language: ${currentLanguage}, source: ${videoSrc}`);
-
-            if (!videoSrc) {
-                console.warn(`playWelcomeVideo: No video source defined for language ${currentLanguage}. Proceeding with text introduction.`);
-                chatHeaderElement.classList.remove('video-active'); // Ensure header is visible
-                startTextIntroduction();
-                return;
-            }
-
-            // Reset video state for new playback attempt
-            welcomeVideoPlayer.classList.remove('visible');
-            chatHeaderElement.classList.add('video-active'); // Hide static header elements while video attempts to play
-            welcomeVideoPlayer.src = videoSrc; // Set new video source
-            welcomeVideoPlayer.load(); // Load the new source
-
-            // Event listener for video errors
-            welcomeVideoPlayer.onerror = (e) => {
-                console.error("playWelcomeVideo: Video error occurred:", e);
-                welcomeVideoPlayer.classList.remove('visible');
-                chatHeaderElement.classList.remove('video-active'); // Show static header elements on error
-                // Display user-friendly message in chat
-                addBotMessage(messages[currentLanguage].videoPlaybackError, false); // No typing effect for this instant message
-                startTextIntroduction(); // Fallback to text on error
-            };
-
-            // Event listener for when video can play without interruption
-            welcomeVideoPlayer.oncanplaythrough = () => {
-                console.log(`playWelcomeVideo: Video canplaythrough for: ${welcomeVideoPlayer.src}. Attempting to play.`);
-                welcomeVideoPlayer.classList.add('visible'); // Make video visible
-                welcomeVideoPlayer.play().then(() => {
-                    console.log(`playWelcomeVideo: Video started playing successfully: ${welcomeVideoPlayer.src}`);
-                }).catch(error => {
-                    console.warn("playWelcomeVideo: Video autoplay prevented (likely due to sound/browser policy):", error);
-                    welcomeVideoPlayer.classList.remove('visible');
-                    chatHeaderElement.classList.remove('video-active'); // Show static header elements if autoplay blocked
-                    // Display user-friendly message in chat
-                    addBotMessage(messages[currentLanguage].videoPlaybackError, false); // No typing effect for this instant message
-                    startTextIntroduction(); // Fallback to text if autoplay blocked
-                });
-            };
-
-            // Event listener for when the video finishes playing
-            welcomeVideoPlayer.onended = () => {
-                console.log(`playWelcomeVideo: Video ended: ${welcomeVideoPlayer.src}`);
-                welcomeVideoPlayer.classList.remove('visible'); // Hide video after it ends
-                chatHeaderElement.classList.remove('video-active'); // Show static header elements after video ends
-                startTextIntroduction(); // Proceed with chat introduction messages
-            };
-
-            // Safety net timeout in case 'oncanplaythrough' or 'play()' promise don't resolve as expected
-            setTimeout(() => {
-                if (!welcomeVideoPlayer.classList.contains('visible') && !welcomeVideoPlayer.ended && !welcomeVideoPlayer.paused) {
-                    console.warn("playWelcomeVideo: Video did not start playing as expected within timeout, or was still attempting. Proceeding with text introduction.");
-                    welcomeVideoPlayer.classList.remove('visible');
-                    chatHeaderElement.classList.remove('video-active');
-                    // Display user-friendly message in chat
-                    addBotMessage(messages[currentLanguage].videoPlaybackError, false); // No typing effect for this instant message
-                    startTextIntroduction();
-                }
-            }, 4000); // Give the video 4 seconds to start
-        }
-
-        /**
-         * Initiates the text-based welcome messages after video playback.
-         */
-        function startTextIntroduction() {
-            console.log("startTextIntroduction called.");
-            setTimeout(async () => {
-                await addBotMessage(messages[currentLanguage].welcome);
-                setTimeout(async () => {
-                    await addBotMessage(messages[currentLanguage].intro);
-                    showQuickReplies('start');
-                }, 1500);
-            }, 1000);
-        }
-
-        /**
-         * Appends a message to the chat display.
-         */
-        function addMessageToDOM(text, sender) {
-            const messageDiv = document.createElement('div');
-            messageDiv.className = `message ${sender}`;
-            const formattedText = text.replace(/\n/g, '<br>');
-            messageDiv.innerHTML = formattedText;
-
-            const timeDiv = document.createElement('div');
-            timeDiv.className = 'message-time';
-            timeDiv.textContent = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-            messageDiv.appendChild(timeDiv);
-
-            chatMessagesContainer.appendChild(messageDiv);
-            scrollToBottom();
-        }
-
-        /**
-         * Adds a bot message to the chat, optionally with a typing indicator.
-         */
-        function addBotMessage(text, showTypingEffect = true) {
-            return new Promise(resolve => {
-                if (showTypingEffect) {
-                    showTypingIndicator();
-                    const typingTime = Math.min(text.length * 30, 2000);
-                    setTimeout(() => {
-                        hideTypingIndicator();
-                        addMessageToDOM(text, 'bot');
-                        resolve();
-                    }, typingTime);
-                } else {
-                    addMessageToDOM(text, 'bot');
-                    resolve();
-                }
-            });
-        }
-
-        /**
-         * Displays a typing indicator in the chat.
-         */
-        function showTypingIndicator() {
-            if (isTyping) return;
-            isTyping = true;
-            const typingDiv = document.createElement('div');
-            typingDiv.className = 'typing-indicator';
-            typingDiv.id = 'typingIndicator';
-            typingDiv.innerHTML = `<div class="typing-dots"><span></span><span></span><span></span></div>`;
-            chatMessagesContainer.appendChild(typingDiv);
-            scrollToBottom();
-        }
-
-        /**
-         * Hides the typing indicator from the chat.
-         */
-        function hideTypingIndicator() {
-            const typingIndicator = document.getElementById('typingIndicator');
-            if (typingIndicator) {
-                typingIndicator.remove();
-            }
-            isTyping = false;
-        }
-
-        /**
-         * Sends a user message.
-         */
-        function sendMessage() {
-            const messageText = chatInput.value.trim();
-            if (!messageText || isTyping) return;
-
-            addMessageToDOM(messageText, 'user');
-            chatInput.value = '';
-            autoResizeTextarea.call(chatInput);
-            hideQuickReplies();
-            disableInput();
-
-            processUserMessage(messageText);
-        }
-
-        /**
-         * Initiates the direct message leaving flow.
-         */
-        async function initiateDirectMessage() {
-            console.log("initiateDirectMessage called.");
-            isLeavingMessageDirectly = true;
-            directMessageSubStep = 1;
-            await addBotMessage(messages[currentLanguage].askName);
-            enableInput();
-        }
-
-        /**
-         * REFACTORED: Processes the user's message with a clearer, prioritized logic.
-         */
-        async function processUserMessage(message) {
-            console.log("processUserMessage called. Message:", message);
-            await delay(500);
-
-            const lowerMessage = message.toLowerCase();
-            const lang = currentLanguage;
-
-            // --- 1. State-based conversation flows (take priority over new intents) ---
-            if (isLeavingMessageDirectly) {
-                if (directMessageSubStep === 1) {
-                    userInfo.name = message;
-                    await addBotMessage(messages[lang].askCompany.replace('{name}', userInfo.name || (lang === 'en' ? 'there' : '皆様')));
-                    directMessageSubStep = 2;
-                } else if (directMessageSubStep === 2) {
-                    userInfo.company = message;
-                    await addBotMessage(messages[lang].messagePrompt);
-                    await delay(1500);
-                    showMessageForm();
-                    isLeavingMessageDirectly = false; // End of this sub-flow
-                    directMessageSubStep = 0;
-                    conversationStep = 99; // Paused state (form is open)
-                }
-                enableInput();
-                return;
-            }
-
-            if (waitingForScheduleConfirmation) {
-                await handleScheduleFollowUp(message);
-                enableInput();
-                return;
-            }
-
-            // --- 2. Top-level commands and new intent matching ---
-            
-            // Exit command
-            const exitIntent = lang === 'ja' ? quickRepliesData.ja.start[7] : quickRepliesData.en.start[6];
-            const exitKeywords = ["quit", "end chat", "やめる", "会話を終了", "bye", "さようなら"];
-            if (exitKeywords.some(keyword => lowerMessage.includes(keyword)) || lowerMessage === exitIntent.toLowerCase()) {
-                await addBotMessage(messages[lang].goodbye);
-                await delay(2000);
-                showRatingPrompt();
-                enableInput();
-                conversationStep = 100; // End state
-                return;
-            }
-            
-            // --- 3. Intent Matching & Flow Control (New, safer structure) ---
-            
-            // Schedule a Chat (Direct action, then follow-up)
-            if (lowerMessage.includes("schedule a chat") || lowerMessage.includes("チャットを予約") || lowerMessage === quickRepliesData[lang].start[0].toLowerCase()) {
-                await addBotMessage(messages[lang].scheduleConfirm);
-                window.open('https://calendly.com/gomes-roger333', '_blank');
-                setTimeout(async () => {
-                    waitingForScheduleConfirmation = true;
-                    await addBotMessage(messages[lang].scheduleFollowUp);
-                    showQuickReplies('scheduleConfirm');
-                    enableInput();
-                }, 2000);
-                return;
-            } 
-            // Leave a Message (starts a multi-step flow)
-            else if (lowerMessage.includes("leave a message") || lowerMessage.includes("メッセージを残す") || lowerMessage === quickRepliesData[lang].start[1].toLowerCase()) {
-                initiateDirectMessage();
-                return; 
-            }
-            // All other intents are one-off and will be followed by the "after" message.
-            else {
-                let informationalIntentReply = null;
+        class CursorController {
+            constructor() {
+                this.dot = document.getElementById('cursorDot');
+                this.outline = document.getElementById('cursorOutline');
+                this.mouseX = window.innerWidth / 2;
+                this.mouseY = window.innerHeight / 2;
                 
-                // Japanese Resume Intents (checked first for specificity)
-                if (lang === 'ja' && (lowerMessage.includes("履歴書") || lowerMessage === quickRepliesData.ja.start[4].toLowerCase())) {
-                    informationalIntentReply = messages.ja.viewRirekisho;
-                } else if (lang === 'ja' && (lowerMessage.includes("職務経歴書") || lowerMessage === quickRepliesData.ja.start[5].toLowerCase())) {
-                    informationalIntentReply = messages.ja.viewShokumuKeirekisho;
-                } 
-                // English Resume Intent
-                else if (lang === 'en' && (lowerMessage.includes("resume") || lowerMessage === quickRepliesData.en.start[4].toLowerCase())) {
-                    informationalIntentReply = messages.en.viewResume;
-                } 
-                // Video Intent
-                else if (lowerMessage.includes("video") || lowerMessage.includes("ビデオ") || lowerMessage.includes("見る") || lowerMessage === quickRepliesData[lang].start[3].toLowerCase()) {
-                    informationalIntentReply = messages[lang].watchVideo;
-                } 
-                // Greeting Intent / Professional Summary
-                else if (lowerMessage.includes("summary") || lowerMessage.includes("概要") || lowerMessage === quickRepliesData[lang].start[2].toLowerCase()) {
-                    informationalIntentReply = messages[lang].professionalSummary;
-                }
-                // LinkedIn Intent
-                const linkedinIndex = lang === 'ja' ? 6 : 5;
-                if (!informationalIntentReply && (lowerMessage.includes("linkedin") || lowerMessage === quickRepliesData[lang].start[linkedinIndex].toLowerCase())) {
-                    informationalIntentReply = messages[lang].linkedinMessage;
-                }
+                // Trail position (lagging behind)
+                this.outlineX = this.mouseX;
+                this.outlineY = this.mouseY;
 
-                // If any informational intent was matched, show the info and then the follow-up.
-                if (informationalIntentReply) {
-                    await addBotMessage(informationalIntentReply);
-                    await delay(2500);
-                    await addBotMessage(messages[lang].afterRogerMessage);
-                    showQuickReplies('purpose');
-                    enableInput();
-                    conversationStep = 99;
+                // Only initialize on non-touch devices
+                if (window.matchMedia("(hover: hover) and (pointer: fine)").matches) {
+                    this.init();
                 } else {
-                    // Fallback if no intent matches at all
-                    await addBotMessage(messages[currentLanguage].generalFallback);
-                    showQuickReplies('start');
-                    conversationStep = 0;
-                    enableInput();
+                    // Hide custom elements on touch
+                    if (this.dot) this.dot.style.display = 'none';
+                    if (this.outline) this.outline.style.display = 'none';
                 }
             }
-        }
 
-        async function handleScheduleFollowUp(message) {
-            console.log("handleScheduleFollowUp called. Message:", message);
-            const lowerMessage = message.toLowerCase();
-            const lang = currentLanguage;
-
-            if (lowerMessage.includes(quickRepliesData[lang].scheduleConfirm[0].toLowerCase()) || lowerMessage.includes("yes") || lowerMessage.includes("はい")) {
-                await addBotMessage(messages[lang].appointmentComplete);
-                await delay(2000);
-                showRatingPrompt();
-                waitingForScheduleConfirmation = false;
-            }
-            else if (lowerMessage.includes(quickRepliesData[lang].scheduleConfirm[1].toLowerCase()) || lowerMessage.includes("still") || lowerMessage.includes("まだ")) {
-                await addBotMessage(messages[lang].scheduleStillWorking);
-                showQuickReplies('scheduleConfirm');
-                waitingForScheduleConfirmation = true;
-            }
-            else {
-                await addBotMessage(messages[lang].scheduleHelp);
-                showQuickReplies('scheduleConfirm');
-                waitingForScheduleConfirmation = true;
-            }
-        }
-
-        // --- UI Updates & Interactions ---
-
-        function showMessageForm() {
-            console.log("showMessageForm called.");
-            chatInputContainer.classList.add('hidden');
-            quickRepliesContainer.classList.add('hidden');
-            messageForm.classList.remove('hidden');
-            chatRatingContainer.classList.add('hidden');
-            resetStars();
-            updateFormLabels();
-            if (userInfo.name) document.getElementById('formName').value = userInfo.name;
-            if (userInfo.company) document.getElementById('formCompany').value = userInfo.company;
-            document.getElementById('formEmail').focus();
-            document.getElementById('formMessage').value = '';
-        }
-
-        function updateFormLabels() {
-            const labels = formLabelsData[currentLanguage];
-            nameLabel.textContent = labels.name;
-            companyLabel.textContent = labels.company;
-            emailLabel.textContent = labels.email;
-            messageLabel.textContent = labels.message;
-            submitBtn.textContent = labels.submit;
-            generateDraftButtonText.textContent = messages[currentLanguage].generateDraft;
-        }
-
-        async function submitMessageForm(event) {
-            event.preventDefault();
-            console.log("submitMessageForm called.");
-
-            const formData = {
-                name: document.getElementById('formName').value,
-                company: document.getElementById('formCompany').value,
-                email: document.getElementById('formEmail').value,
-                message: document.getElementById('formMessage').value
-            };
-
-            submitBtn.disabled = true;
-            generateDraftButton.disabled = true;
-            submitBtn.textContent = messages[currentLanguage].formSending;
-            closeNotice.classList.remove('hidden');
-            closeNoticeText.textContent = messages[currentLanguage].formSending;
-
-            console.log("Form data to be sent:", formData);
-
-            try {
-                if (GOOGLE_APPS_SCRIPT_WEB_APP_URL === 'YOUR_GOOGLE_APPS_SCRIPT_WEB_APP_URL_HERE' || !GOOGLE_APPS_SCRIPT_WEB_APP_URL.startsWith('https://script.google.com/macros/s/')) {
-                    throw new Error("Google Apps Script Web App URL is not configured correctly. Please update the GOOGLE_APPS_SCRIPT_WEB_APP_URL constant in the script.");
-                }
-
-                const response = await fetch(GOOGLE_APPS_SCRIPT_WEB_APP_URL, {
-                    method: 'POST',
-                    mode: 'no-cors',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(formData),
-                });
-
-                console.log("Response from Apps Script (due to no-cors, cannot read body):", response);
-                closeNoticeText.textContent = messages[currentLanguage].formSent;
-
-                await delay(1500); // Wait for user to read the notice
-                showRatingPrompt();
-
-            } catch (error) {
-                console.error("Error sending message to Apps Script:", error);
-                closeNoticeText.textContent = messages[currentLanguage].formError;
-                // Re-enable buttons on failure
-                submitBtn.disabled = false;
-                generateDraftButton.disabled = false;
-                submitBtn.textContent = formLabelsData[currentLanguage].submit;
-            }
-        }
-
-        async function generateMessageDraft() {
-            console.log("generateMessageDraft called.");
-            const formMessageInput = document.getElementById('formMessage');
-            const userIntent = formMessageInput.value.trim();
-            const userName = document.getElementById('formName').value.trim();
-            const userCompany = document.getElementById('formCompany').value.trim();
-
-            if (!userIntent) {
-                formMessageInput.value = "メッセージの意図を入力してください。\n(Please enter your message intent.)";
-                return;
-            }
-
-            generateDraftButton.disabled = true;
-            generateDraftButtonText.textContent = messages[currentLanguage].generatingDraft;
-            generateDraftButton.classList.add('opacity-50', 'cursor-not-allowed');
-
-            try {
-                let prompt;
-                if (currentLanguage === 'en') {
-                    prompt = `Draft a professional email/message to Roger. The user's name is "${userName}", their company is "${userCompany}". Their message intent is: "${userIntent}". Ensure the draft is concise, professional, and clearly conveys the user's purpose.`;
-                } else {
-                    prompt = `ロジャーへのプロフェッショナルなメール/メッセージの下書きを作成してください。ユーザーの名前は「${userName}」、会社は「${userCompany}」です。メッセージの意図は「${userIntent}」です。下書きは簡潔でプロフェッショナルであり、ユーザーの目的を明確に伝えるようにしてください。`;
-                }
-                
-                let chatHistory = [];
-                chatHistory.push({ role: "user", parts: [{ text: prompt }] });
-                const payload = { contents: chatHistory };
-                const apiKey = "" 
-                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
-
-                const response = await fetch(apiUrl, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
-                });
-
-                const result = await response.json();
-
-                if (result.candidates && result.candidates.length > 0 &&
-                    result.candidates[0].content && result.candidates[0].content.parts &&
-                    result.candidates[0].content.parts.length > 0) {
-                    const text = result.candidates[0].content.parts[0].text;
-                    formMessageInput.value = text;
-                    generateDraftButtonText.textContent = messages[currentLanguage].draftGenerated;
-                } else {
-                    formMessageInput.value = messages[currentLanguage].generalFallback;
-                }
-            } catch (error) {
-                console.error("Error generating message draft:", error);
-                formMessageInput.value = "下書きの生成中にエラーが発生しました。\n(Error generating draft.)";
-            } finally {
-                generateDraftButton.disabled = false;
-                generateDraftButton.classList.remove('opacity-50', 'cursor-not-allowed');
-                setTimeout(() => {
-                    generateDraftButtonText.textContent = messages[currentLanguage].generateDraft;
-                }, 2000);
-                autoResizeTextarea.call(formMessageInput);
-            }
-        }
-
-        function showQuickReplies(type) {
-            console.log("showQuickReplies called. Type:", type);
-            quickRepliesContainer.innerHTML = '';
-            quickRepliesContainer.dataset.replyType = type;
-            const replies = quickRepliesData[currentLanguage][type];
-
-            if (replies) {
-                replies.forEach(reply => {
-                    const button = document.createElement('button');
-                    button.className = 'quick-reply';
-                    button.textContent = reply;
-                    button.onclick = () => handleQuickReply(reply);
-                    quickRepliesContainer.appendChild(button);
-                });
-                quickRepliesContainer.classList.remove('hidden');
-                scrollToBottom();
-            }
-        }
-
-        function handleQuickReply(replyText) {
-            console.log("handleQuickReply called. Reply Text:", replyText);
-            addMessageToDOM(replyText, 'user');
-            hideQuickReplies();
-            disableInput();
-            processUserMessage(replyText);
-        }
-
-        function hideQuickReplies() {
-            quickRepliesContainer.classList.add('hidden');
-        }
-
-        function disableInput() {
-            chatInput.disabled = true;
-            sendButton.disabled = true;
-        }
-
-        function enableInput() {
-            chatInput.disabled = false;
-            sendButton.disabled = false;
-            chatInput.focus();
-        }
-
-        function scrollToBottom() {
-            chatMessagesContainer.scrollTop = chatMessagesContainer.scrollHeight;
-        }
-
-        function updateUIForLanguage() {
-            chatTitleElement.textContent = messages[currentLanguage].chatTitleMain;
-            chatSubtitleElement.textContent = messages[currentLanguage].chatSubtitleMain;
-            chatInput.placeholder = messages[currentLanguage].inputPlaceholder;
-            profilePicImg.alt = messages[currentLanguage].profileAltText;
-            updateFormLabels();
-            ratingPrompt.textContent = messages[currentLanguage].rateExperience;
-            ratingThankYou.textContent = messages[currentLanguage].thankYouForFeedback;
-            creatorSignatureElement.textContent = messages[currentLanguage].creatorSignaturePrefix + " Roger Gomes";
-        }
-
-        function showRatingPrompt() {
-            console.log("showRatingPrompt called.");
-            chatInputContainer.classList.add('hidden');
-            messageForm.classList.add('hidden');
-            quickRepliesContainer.classList.add('hidden');
-            chatRatingContainer.classList.remove('hidden');
-            ratingPrompt.textContent = messages[currentLanguage].rateExperience;
-            ratingThankYou.classList.add('hidden');
-            resetStars();
-            scrollToBottom();
-        }
-
-        async function handleStarRatingClick(event) {
-            console.log("handleStarRatingClick called.");
-            const clickedStar = event.target.closest('.star');
-            if (clickedStar) {
-                const rating = parseInt(clickedStar.dataset.value);
-                console.log("User rated:", rating, "stars");
-                const stars = Array.from(starRatingContainer.children);
-                stars.forEach(star => {
-                    if (parseInt(star.dataset.value) <= rating) {
-                        star.classList.add('selected');
-                    } else {
-                        star.classList.remove('selected');
-                    }
-                });
-
-                ratingThankYou.textContent = messages[currentLanguage].thankYouForFeedback;
-                ratingThankYou.classList.remove('hidden');
-
-                starRatingContainer.style.pointerEvents = 'none';
-
-                setTimeout(async () => {
-                    // Hide the main chat container
-                    chatContainer.style.display = 'none';
-
-                    // Create and style the final closing message
-                    const finalMessageContainer = document.createElement('div');
-                    finalMessageContainer.style.textAlign = 'center';
-                    finalMessageContainer.style.color = 'white';
-                    finalMessageContainer.style.fontSize = '1.2em';
-                    finalMessageContainer.style.padding = '40px';
-                    finalMessageContainer.style.maxWidth = '600px';
-                    finalMessageContainer.style.background = 'rgba(0, 0, 0, 0.2)';
-                    finalMessageContainer.style.borderRadius = '20px';
-                    finalMessageContainer.style.backdropFilter = 'blur(10px)';
-                    finalMessageContainer.style.animation = 'slideUp 0.6s ease-out';
-                    finalMessageContainer.innerHTML = `
-                        <p style="margin-bottom: 1.5em;">That’s a wrap for today! I hope Roger’s AI Assistant was helpful. Until next time! You can go ahead and close this window now.</p>
-                        <p>今日はここまでです！RogerのAIアシスタントがお役に立てていたら嬉しいです。<br>またお会いしましょう！このウィンドウは閉じていただいて大丈夫です。</p>
-                    `;
+            init() {
+                // Track mouse position
+                document.addEventListener('mousemove', (e) => {
+                    this.mouseX = e.clientX;
+                    this.mouseY = e.clientY;
                     
-                    // Append the final message to the body
-                    document.body.appendChild(finalMessageContainer);
+                    // Move dot instantly for responsiveness
+                    this.dot.style.transform = `translate(${this.mouseX}px, ${this.mouseY}px) translate(-50%, -50%)`;
 
-                }, 2000); // A 2-second delay after the "Thank you" message
+                    // Parallax background
+                    // Calculate slight movement based on mouse position from center
+                    const moveX = (e.clientX / window.innerWidth - 0.5) * 20;
+                    const moveY = (e.clientY / window.innerHeight - 0.5) * 20;
+                    document.body.style.backgroundPosition = `${50 + moveX}% ${50 + moveY}%`;
+                });
+
+                // Click Ripple Effect
+                document.addEventListener('mousedown', () => {
+                    this.outline.classList.add('clicking');
+                    setTimeout(() => this.outline.classList.remove('clicking'), 400);
+                });
+
+                // Animate outline with delay/smoothing
+                this.animate();
+
+                // Add hover effects to interactive elements
+                this.addHoverListeners();
+            }
+
+            animate() {
+                // Smooth interpolation factor (lower = slower/smoother lag)
+                const speed = 0.15;
+                
+                this.outlineX += (this.mouseX - this.outlineX) * speed;
+                this.outlineY += (this.mouseY - this.outlineY) * speed;
+                
+                this.outline.style.transform = `translate(${this.outlineX}px, ${this.outlineY}px) translate(-50%, -50%)`;
+                
+                requestAnimationFrame(() => this.animate());
+            }
+
+            addHoverListeners() {
+                // Select all interactive elements
+                const interactives = document.querySelectorAll('a, button, input, textarea, .quick-reply, .language-button, .star');
+                
+                interactives.forEach(el => {
+                    el.addEventListener('mouseenter', () => document.body.classList.add('hovering'));
+                    el.addEventListener('mouseleave', () => document.body.classList.remove('hovering'));
+                });
+
+                // Observer to attach listeners to new dynamic elements (like chat bubbles/buttons)
+                const observer = new MutationObserver((mutations) => {
+                    mutations.forEach((mutation) => {
+                        if (mutation.addedNodes.length) {
+                            mutation.addedNodes.forEach(node => {
+                                if (node.nodeType === 1) { // Element node
+                                    // Check if the node itself is interactive or contains interactives
+                                    const newInteractives = node.matches && node.matches('button, .quick-reply') ? [node] : [];
+                                    if (node.querySelectorAll) {
+                                        newInteractives.push(...node.querySelectorAll('button, .quick-reply, a'));
+                                    }
+                                    
+                                    newInteractives.forEach(el => {
+                                        el.addEventListener('mouseenter', () => document.body.classList.add('hovering'));
+                                        el.addEventListener('mouseleave', () => document.body.classList.remove('hovering'));
+                                    });
+                                }
+                            });
+                        }
+                    });
+                });
+
+                observer.observe(document.body, { childList: true, subtree: true });
             }
         }
 
-        function handleStarRatingHover(event) {
-            const hoveredStar = event.target.closest('.star');
-            if (hoveredStar && starRatingContainer.style.pointerEvents !== 'none') {
-                const hoverValue = parseInt(hoveredStar.dataset.value);
-                const stars = Array.from(starRatingContainer.children);
-                stars.forEach(star => {
-                    if (parseInt(star.dataset.value) <= hoverValue) {
-                        star.classList.add('selected');
-                    } else {
-                        star.classList.remove('selected');
+        /**
+         * Main Application Class
+         * Encapsulates logic to avoid global scope pollution.
+         */
+        class AI_Assistant {
+            constructor() {
+                this.lang = 'en';
+                this.state = 'init'; // init, chat, form, done
+                
+                // Cache DOM
+                this.dom = {
+                    screens: {
+                        lang: document.getElementById('languageSelectionScreen'),
+                        chat: document.getElementById('chatContainer')
+                    },
+                    messages: document.getElementById('chatMessages'),
+                    inputArea: document.getElementById('inputArea'),
+                    quickReplies: document.getElementById('quickReplies'),
+                    input: document.getElementById('chatInput'),
+                    form: document.getElementById('contactForm'),
+                    typing: document.getElementById('typingIndicator'),
+                    rating: document.getElementById('ratingSection'),
+                    title: document.querySelector('.chat-title'),
+                    subtitle: document.querySelector('.chat-subtitle')
+                };
+
+                this.bindEvents();
+                
+                // Init Cursor
+                this.cursor = new CursorController();
+            }
+
+            bindEvents() {
+                document.getElementById('sendBtn').onclick = () => this.handleUserInput();
+                
+                // Auto-resize textarea
+                this.dom.input.addEventListener('input', function() {
+                    this.style.height = 'auto';
+                    this.style.height = (this.scrollHeight) + 'px';
+                });
+
+                // Enter key to send
+                this.dom.input.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                        e.preventDefault();
+                        this.handleUserInput();
+                    }
+                });
+
+                // Star rating logic
+                document.getElementById('stars').addEventListener('click', (e) => {
+                    if (e.target.tagName === 'SPAN') {
+                        const rating = e.target.getAttribute('data-val');
+                        this.handleRating(rating);
                     }
                 });
             }
-        }
 
-        function handleStarRatingOut(event) {
-            if (starRatingContainer.style.pointerEvents !== 'none') {
-                resetStars();
+            setLanguage(selectedLang) {
+                this.lang = selectedLang;
+                
+                // Update Header UI
+                const txt = RESOURCES[this.lang].ui;
+                this.dom.title.textContent = txt.title;
+                this.dom.subtitle.textContent = txt.subtitle;
+                this.dom.input.placeholder = txt.placeholder;
+
+                // Update Form Labels
+                document.getElementById('lbl_name').textContent = txt.form.name;
+                document.getElementById('lbl_company').textContent = txt.form.company;
+                document.getElementById('lbl_email').textContent = txt.form.email;
+                document.getElementById('lbl_msg').textContent = txt.form.msg;
+                document.getElementById('btn_send').textContent = txt.form.send;
+                document.getElementById('btn_draft').textContent = txt.form.draft;
+
+                // Switch screens
+                this.dom.screens.lang.style.display = 'none';
+                this.dom.screens.chat.style.display = 'flex';
+
+                // Start Flow
+                this.startConversation();
+            }
+
+            async startConversation() {
+                await this.botType(RESOURCES[this.lang].welcome);
+                await this.sleep(800);
+                await this.botType(RESOURCES[this.lang].menuPrompt);
+                this.showMainMenu();
+            }
+
+            // Renders the grid buttons based on current language
+            showMainMenu() {
+                const btns = RESOURCES[this.lang].ui.buttons;
+                const container = this.dom.quickReplies;
+                container.innerHTML = '';
+                container.classList.remove('hidden');
+
+                // Helper to create styled buttons
+                const createBtn = (text, type, action) => {
+                    const btn = document.createElement('div');
+                    btn.className = `quick-reply ${type}`;
+                    btn.textContent = text;
+                    btn.onclick = () => this.handleQuickReply(text, action);
+                    return btn;
+                };
+
+                // Logic to map button text to visual hierarchy
+                // Row 1: Primary Actions
+                container.appendChild(createBtn(btns[0], 'primary', 'schedule')); // Schedule
+                container.appendChild(createBtn(btns[1], 'primary', 'message'));  // Message
+
+                // Row 2: Secondary Info
+                container.appendChild(createBtn(btns[2], 'secondary', 'summary')); // Summary
+                container.appendChild(createBtn(btns[3], 'secondary', 'resume'));  // Resume
+
+                // Row 3: Connection (Handling Japanese extra button for detailed resume)
+                if (this.lang === 'ja') {
+                     container.appendChild(createBtn(btns[4], 'secondary', 'resume_detail')); // Shokumu Keirekisho
+                     container.appendChild(createBtn(btns[5], 'secondary', 'linkedin'));      // LinkedIn
+                     // Row 4
+                     container.appendChild(createBtn(btns[6], 'neutral', 'exit'));            // Exit
+                } else {
+                    container.appendChild(createBtn(btns[4], 'secondary', 'linkedin')); // LinkedIn
+                    container.appendChild(createBtn(btns[5], 'neutral', 'exit'));       // Exit
+                }
+            }
+
+            handleQuickReply(text, action) {
+                this.addMessage(text, 'user');
+                this.dom.quickReplies.classList.add('hidden');
+                this.processIntent(action);
+            }
+
+            handleUserInput() {
+                const txt = this.dom.input.value.trim();
+                if (!txt) return;
+                
+                this.addMessage(txt, 'user');
+                this.dom.input.value = '';
+                this.dom.input.style.height = 'auto'; // Reset height
+                this.dom.quickReplies.classList.add('hidden');
+                
+                // Basic keyword matching for free-text inputs
+                const lower = txt.toLowerCase();
+                let action = 'default';
+                
+                if (lower.includes('schedule') || lower.includes('chat') || lower.includes('予約')) action = 'schedule';
+                else if (lower.includes('message') || lower.includes('メッセージ')) action = 'message';
+                else if (lower.includes('resume') || lower.includes('履歴書')) action = 'resume';
+                else if (lower.includes('summary') || lower.includes('概要')) action = 'summary';
+                else if (lower.includes('linkedin')) action = 'linkedin';
+                else if (lower.includes('bye') || lower.includes('exit') || lower.includes('終了')) action = 'exit';
+
+                this.processIntent(action);
+            }
+
+            async processIntent(action) {
+                await this.sleep(500); // small thinking delay
+
+                switch(action) {
+                    case 'schedule':
+                        await this.botType(RESOURCES[this.lang].schedule);
+                        window.open('https://calendly.com/gomes-roger333', '_blank');
+                        this.showMainMenu(); 
+                        break;
+
+                    case 'message':
+                        await this.botType(RESOURCES[this.lang].formIntro);
+                        this.dom.inputArea.classList.add('hidden');
+                        this.dom.form.classList.remove('hidden');
+                        break;
+
+                    case 'summary':
+                        // Formats the text with line breaks
+                        const summaryText = RESOURCES[this.lang].summary.replace(/\n/g, '<br>');
+                        await this.botType(summaryText);
+                        this.showMainMenu();
+                        break;
+
+                    case 'resume':
+                        await this.botType(RESOURCES[this.lang].resume);
+                        const resumeUrl = this.lang === 'ja' 
+                            ? 'https://drive.google.com/file/d/1xCcKF-MIK3BRbHdWX_j7B6u1qjJ_osrX/preview' 
+                            : 'https://drive.google.com/file/d/1dotyuwYDQ2fdn9JzmKlQPvWDYbElngWB/preview';
+                        this.embedIframe(resumeUrl);
+                        this.showMainMenu();
+                        break;
+                    
+                    case 'resume_detail': // Japanese Shokumu Keirekisho
+                        await this.botType("承知いたしました。ロジャーの職務経歴書です。");
+                        this.embedIframe('https://drive.google.com/file/d/1jRdu6uPBrGKT0ctRrdmGWLW_-QI52fJj/preview');
+                        this.showMainMenu();
+                        break;
+
+                    case 'linkedin':
+                        await this.botType(RESOURCES[this.lang].linkedin);
+                        this.showMainMenu();
+                        break;
+
+                    case 'exit':
+                        this.dom.inputArea.classList.add('hidden');
+                        this.dom.quickReplies.classList.add('hidden');
+                        this.dom.rating.classList.remove('hidden');
+                        break;
+
+                    default:
+                        await this.botType(this.lang === 'en' ? "I'm not sure I understand. Could you pick an option?" : "申し訳ありません、理解できませんでした。オプションから選んでいただけますか？");
+                        this.showMainMenu();
+                }
+            }
+
+            // --- Helper Methods ---
+
+            addMessage(text, sender) {
+                const div = document.createElement('div');
+                div.className = `message ${sender}`;
+                div.innerHTML = text;
+                
+                // Time stamp
+                const time = document.createElement('span');
+                time.className = 'message-time';
+                time.innerText = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+                div.appendChild(time);
+
+                this.dom.messages.appendChild(div);
+                this.scrollToBottom();
+            }
+
+            async botType(text) {
+                this.dom.typing.style.display = 'block';
+                this.scrollToBottom();
+                
+                // Simulate reading/typing time based on length
+                const delay = Math.min(Math.max(text.length * 15, 800), 2000);
+                await this.sleep(delay);
+
+                this.dom.typing.style.display = 'none';
+                this.addMessage(text, 'bot');
+            }
+
+            embedIframe(url) {
+                const iframe = document.createElement('iframe');
+                iframe.src = url;
+                iframe.className = 'resume-frame';
+                this.dom.messages.appendChild(iframe);
+                this.scrollToBottom();
+            }
+
+            scrollToBottom() {
+                this.dom.messages.scrollTop = this.dom.messages.scrollHeight;
+            }
+
+            sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+            // --- Form Handling ---
+
+            async submitForm() {
+                const btn = document.getElementById('btn_send');
+                const status = document.getElementById('formStatus');
+                
+                const data = {
+                    name: document.getElementById('f_name').value,
+                    company: document.getElementById('f_company').value,
+                    email: document.getElementById('f_email').value,
+                    message: document.getElementById('f_message').value
+                };
+
+                if (!data.name || !data.email || !data.message) {
+                    alert(this.lang === 'en' ? "Please fill in required fields." : "必須項目を入力してください。");
+                    return;
+                }
+
+                btn.disabled = true;
+                btn.innerText = "Sending...";
+
+                try {
+                    await fetch(GOOGLE_APPS_SCRIPT_URL, {
+                        method: 'POST',
+                        mode: 'no-cors',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(data)
+                    });
+                    
+                    status.innerText = RESOURCES[this.lang].thanks;
+                    await this.sleep(1500);
+                    
+                    // Hide form and go to rating
+                    this.dom.form.classList.add('hidden');
+                    this.dom.rating.classList.remove('hidden');
+
+                } catch (e) {
+                    console.error(e);
+                    btn.innerText = "Error";
+                    status.innerText = RESOURCES[this.lang].error;
+                    btn.disabled = false;
+                }
+            }
+
+            async generateDraft() {
+                const msgInput = document.getElementById('f_message');
+                const intent = msgInput.value;
+                const btn = document.getElementById('btn_draft');
+
+                if (!intent) {
+                    alert("Please type a few keywords about what you want to say first.");
+                    return;
+                }
+
+                btn.disabled = true;
+                btn.innerText = "Generating...";
+
+                // Using the provided Gemini setup
+                try {
+                    const prompt = this.lang === 'en' 
+                        ? `Write a short, professional business message to Roger based on this intent: "${intent}". Keep it under 3 sentences.` 
+                        : `ロジャーへの短いビジネスメッセージを書いてください。意図：「${intent}」。3文以内で。`;
+                    
+                    // Note: For production, API key should be retrieved from a secure backend endpoint
+                    // This is a demo implementation for portfolio purposes
+                    const apiKey = ""; // Replace with your key for testing
+                    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
+                    });
+
+                    const result = await response.json();
+                    const text = result.candidates[0].content.parts[0].text;
+                    msgInput.value = text;
+
+                } catch (e) {
+                    console.error("Draft failed", e);
+                    msgInput.value += " (Draft generation failed)";
+                } finally {
+                    btn.disabled = false;
+                    btn.innerText = RESOURCES[this.lang].ui.form.draft;
+                }
+            }
+            
+            handleRating(val) {
+                this.dom.rating.innerHTML = `<p style="color:green; padding: 20px;">${this.lang === 'en' ? "Thank you!" : "ありがとうございます！"}</p>`;
+                setTimeout(() => {
+                    document.body.innerHTML = `<div style="color: #4a5568; text-align: center;">
+                        <h2>${this.lang === 'en' ? "Session Ended" : "セッション終了"}</h2>
+                        <p>You can close this tab now.</p>
+                    </div>`;
+                }, 2000);
             }
         }
 
-        function resetStars() {
-            const stars = Array.from(starRatingContainer.children);
-            stars.forEach(star => star.classList.remove('selected'));
-            starRatingContainer.style.pointerEvents = 'auto';
-        }
+        // Initialize App
+        const app = new AI_Assistant();
 
-        function delay(ms) {
-            return new Promise(resolve => setTimeout(resolve, ms));
-        }
     </script>
 </body>
 </html>
