@@ -1,22 +1,23 @@
 <!DOCTYPE html>
 <!-- 
     Roger's AI Assistant - Enterprise Edition
-    Built by Roger Gomes
-    Last updated: November 22, 2025
-    Version: 14.0
+    Version: 21.1 (Bug Fix)
+    
+    Changelog:
+    - [Fix] Fixed syntax error in askBurn() method (missing quote).
+    - [UI] Retained Lime Green Glow effect on buttons.
+    - [Content] Maintained all strategic content updates.
 -->
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Roger's AI Assistant | Enterprise Connect</title>
     <style>
         /* * CORE VARIABLES & RESET
          * Updated palette: Turquoise background + Gold accents
          */
         :root {
-            /* User requested Turquoise #00CEC8. 
-               Added a slightly darker shade for bottom to create a premium gradient depth. */
             --bg-gradient-top: #00CEC8;
             --bg-gradient-bottom: #00a6a2;
             
@@ -42,17 +43,19 @@
             cursor: none; /* Hide default cursor globally */
         }
 
+        /* UPDATED FOR FULL SCREEN LAYOUT */
         body {
             font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, Helvetica, Arial, sans-serif;
             background: linear-gradient(180deg, var(--bg-gradient-top) 0%, var(--bg-gradient-bottom) 100%);
             min-height: 100vh;
             display: flex;
             flex-direction: column;
-            justify-content: center;
+            justify-content: center; /* Keeps language screen centered */
             align-items: center;
-            padding: 20px;
+            margin: 0;
+            padding: 0; /* REMOVED PADDING for full screen */
             color: var(--text-dark);
-            overflow-x: hidden; /* Prevent cursor causing scroll */
+            overflow: hidden; /* Prevent body scroll, handle in chat container */
             
             /* PARALLAX SETUP */
             background-size: 120% 120%;
@@ -75,26 +78,20 @@
             transition: opacity 0.3s ease, transform 0.1s ease; /* Smooth fades */
         }
 
-        /* The primary pointer (small dot) */
         .cursor-dot {
             width: 8px;
             height: 8px;
-            /* UPDATED: Using Dark Slate text color for high visibility on white & turquoise */
             background-color: var(--text-dark); 
-            box-shadow: 0 0 4px rgba(255, 255, 255, 0.4); /* Subtle white glow to help on dark header */
+            box-shadow: 0 0 4px rgba(255, 255, 255, 0.4);
         }
 
-        /* The trailing ring */
         .cursor-outline {
             width: 40px;
             height: 40px;
-            /* UPDATED: Dark slate ring with transparency */
             border: 1px solid rgba(45, 55, 72, 0.5); 
             transition: width 0.2s, height 0.2s, background-color 0.2s, border-color 0.2s; 
-            /* Note: transform is handled by JS for performance */
         }
 
-        /* Ripple Effect on Click */
         @keyframes cursorRipple {
             0% { transform: translate(-50%, -50%) scale(1); opacity: 0.5; }
             100% { transform: translate(-50%, -50%) scale(2); opacity: 0; }
@@ -104,11 +101,9 @@
             animation: cursorRipple 0.4s ease-out;
         }
 
-        /* Hover state: When over a clickable element */
         body.hovering .cursor-outline {
             width: 60px;
             height: 60px;
-            /* UPDATED: Faint dark fill on hover */
             background-color: rgba(45, 55, 72, 0.08); 
             border-color: transparent;
         }
@@ -117,12 +112,10 @@
             opacity: 0.5;
         }
 
-        /* Restore default cursor for iframes (like the resume) because custom cursors get stuck there */
         iframe {
             cursor: auto !important;
         }
 
-        /* MOBILE OVERRIDE: Disable custom cursor on touch devices to prevent bugs */
         @media (hover: none) and (pointer: coarse) {
             .cursor-dot, .cursor-outline {
                 display: none !important;
@@ -133,18 +126,16 @@
         }
 
         /* ---------------------------------------------------------
-           EXISTING STYLES
+           COMPONENT STYLES
            --------------------------------------------------------- */
 
-        /* * COMPONENT: LANGUAGE SCREEN
-         * Clean, frosted glass effect
-         */
+        /* Language Selection - Centered Card */
         .language-selection-screen {
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            width: 100%;
+            width: 90%;
             max-width: 450px;
             background: white;
             border-radius: var(--radius-lg);
@@ -152,6 +143,7 @@
             padding: 40px 30px;
             text-align: center;
             animation: fadeInUp 0.6s ease-out;
+            z-index: 10;
         }
 
         .language-selection-screen h1 {
@@ -172,7 +164,7 @@
             border-radius: var(--radius-md);
             font-size: 1.1em;
             font-weight: 600;
-            cursor: pointer; /* JS will handle custom cursor hover */
+            cursor: pointer;
             transition: all 0.2s ease;
             display: flex;
             align-items: center;
@@ -182,84 +174,53 @@
 
         .language-button:hover {
             background: #f7fafc;
-            border-color: var(--primary-blue);
+            border-color: #32cd32; /* Lime accent */
             transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            box-shadow: 0 0 20px rgba(50, 205, 50, 0.5); /* Lime Green Glow */
         }
 
         /* * COMPONENT: CHAT CONTAINER
-         * The main app shell
+         * UPDATED: Full Screen Logic
          */
         .chat-container {
-            max-width: 480px;
-            width: 100%;
-            height: 700px; /* Fixed height for consistency */
-            max-height: 90vh;
+            width: 100vw; /* Full viewport width */
+            height: 100vh; /* Full viewport height */
+            max-width: 100%;
+            max-height: 100vh;
             background: white;
-            border-radius: var(--radius-lg);
-            box-shadow: var(--shadow-soft);
+            border-radius: 0; /* Remove rounded corners for full-screen */
+            box-shadow: none;
             display: flex;
             flex-direction: column;
             overflow: hidden;
-            /* Initially hidden via JS until language selected */
-            display: none; 
+            display: none; /* Initially hidden */
             position: relative;
         }
 
-        /* * COMPONENT: HEADER
-         * Professional dark theme
-         */
+        /* * COMPONENT: HEADER */
         .chat-header {
             background: linear-gradient(135deg, var(--header-gradient-start), var(--header-gradient-end));
             color: white;
-            padding: 25px 20px;
+            padding: 15px 20px; /* Slightly tighter padding for full screen header */
             text-align: center;
             flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: flex-start;
+            gap: 15px;
         }
 
-        /* The Avatar Container - Holds the looping video */
+        /* UPDATED: Profile Container with Gold Pulse */
         .profile-container {
-            width: 85px;
-            height: 85px;
-            margin: 0 auto 15px;
+            width: 50px; /* Smaller avatar for header bar style */
+            height: 50px;
             border-radius: 50%;
-            
-            /* GOLD & GLOW EFFECT UPDATE */
-            border: 3px solid var(--gold-shiny);
-            padding: 3px; 
+            border: 2px solid var(--gold-shiny);
+            padding: 2px; 
             position: relative;
-            transition: transform 0.3s ease;
-            
-            /* Animation for the glow from behind */
+            flex-shrink: 0;
+            /* Animation for the glow */
             animation: goldPulse 3s infinite ease-in-out;
-        }
-
-        /* Gold Glow & Breathing Animation */
-        @keyframes goldPulse {
-            0% {
-                box-shadow: 0 0 5px rgba(255, 215, 0, 0.3);
-                border-color: #dbb904; /* Darker gold */
-                transform: scale(1);
-            }
-            50% {
-                box-shadow: 0 0 25px rgba(255, 215, 0, 0.8); /* Strong glow */
-                border-color: #ffe34d; /* Brighter gold */
-                transform: scale(1.02);
-            }
-            100% {
-                box-shadow: 0 0 5px rgba(255, 215, 0, 0.3);
-                border-color: #dbb904;
-                transform: scale(1);
-            }
-        }
-
-        /* Subtle interaction on avatar hover - Overrides pulse */
-        .profile-container:hover {
-            transform: scale(1.08);
-            transition: transform 0.3s ease;
-            animation: none; /* Pause pulsing on hover */
-            box-shadow: 0 0 30px rgba(255, 215, 0, 0.9);
-            border-color: #ffe34d;
         }
 
         .profile-media {
@@ -271,7 +232,6 @@
             position: relative;
         }
 
-        /* Use object-fit to ensure video covers the circle perfectly */
         .profile-media video, 
         .profile-media img {
             width: 100%;
@@ -280,59 +240,51 @@
             display: block;
         }
 
-        /* Fallback image is hidden by default if video loads */
-        .avatar-fallback-img {
-            position: absolute;
-            top: 0;
-            left: 0;
-            z-index: 1; /* Behind video */
-        }
-        
-        .avatar-video {
-            position: absolute;
-            top: 0;
-            left: 0;
-            z-index: 2; /* On top */
+        .header-text {
+            text-align: left;
         }
 
         .chat-title {
             font-size: 1.1rem;
             font-weight: 600;
             letter-spacing: 0.5px;
-            margin-bottom: 4px;
+            line-height: 1.2;
         }
 
         .chat-subtitle {
-            font-size: 0.85rem;
+            font-size: 0.8rem;
             opacity: 0.8;
             font-weight: 400;
         }
 
-        /* * COMPONENT: MESSAGES
-         */
+        /* * COMPONENT: MESSAGES */
         .chat-messages {
             flex: 1;
-            padding: 20px;
+            padding: 20px 20px 40px 20px; /* Extra bottom padding */
             overflow-y: auto;
             display: flex;
             flex-direction: column;
             gap: 16px;
             background-color: #fff;
-            scroll-behavior: smooth; /* Smooth scrolling */
+            scroll-behavior: smooth;
+            max-width: 900px; /* Constrain reading width for better UX on large screens */
+            width: 100%;
+            margin: 0 auto; /* Center the message column */
         }
 
         .message {
             max-width: 85%;
             padding: 14px 18px;
             border-radius: 18px;
-            font-size: 0.95rem;
-            line-height: 1.5;
+            font-size: 1rem; /* Slightly larger for readability */
+            line-height: 1.6;
             position: relative;
             animation: messageSlide 0.3s ease-out;
+            white-space: pre-wrap;
         }
 
         .message.bot {
-            background: #f1f5f9; /* Light slate gray */
+            background: #f1f5f9;
             color: var(--text-dark);
             align-self: flex-start;
             border-bottom-left-radius: 4px;
@@ -354,18 +306,27 @@
         }
         .message.user .message-time { text-align: right; color: rgba(255,255,255,0.9); }
 
-        /* * COMPONENT: INPUT AREA & QUICK REPLIES
-         */
+        /* * COMPONENT: INPUT AREA & QUICK REPLIES */
         .chat-input-container {
             padding: 20px;
             border-top: 1px solid #edf2f7;
             background: white;
+            width: 100%;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            align-items: center; /* Center content */
         }
 
-        /* Grid Layout for Buttons - Enterprise Requirement */
+        .input-width-constraint {
+            width: 100%;
+            max-width: 900px; /* Match message width constraint */
+        }
+
+        /* Grid Layout for Buttons */
         .quick-replies {
             display: grid;
-            grid-template-columns: repeat(2, 1fr); /* 2 columns equal width */
+            grid-template-columns: repeat(2, 1fr);
             gap: 10px;
             margin-bottom: 15px;
             width: 100%;
@@ -374,9 +335,9 @@
         .quick-reply {
             padding: 12px 10px;
             border-radius: 8px;
-            font-size: 0.85rem;
+            font-size: 0.9rem;
             font-weight: 600;
-            cursor: pointer; /* JS will handle custom cursor hover */
+            cursor: pointer;
             transition: all 0.2s ease;
             text-align: center;
             border: 1px solid transparent;
@@ -387,33 +348,17 @@
             box-shadow: 0 1px 2px rgba(0,0,0,0.05);
         }
 
-        /* Primary Actions (Blue Gradient) */
-        .quick-reply.primary {
-            background: linear-gradient(135deg, var(--primary-blue), var(--primary-blue-dark));
-            color: white;
-            border: none;
+        .quick-reply.primary { background: linear-gradient(135deg, var(--primary-blue), var(--primary-blue-dark)); color: white; border: none; }
+        .quick-reply.secondary { background: white; border: 1px solid var(--primary-blue); color: var(--primary-blue); }
+        .quick-reply.neutral { background: #edf2f7; color: var(--text-light); border: 1px solid #e2e8f0; }
+
+        .quick-reply:hover { 
+            transform: translateY(-2px); 
+            box-shadow: 0 0 15px rgba(50, 205, 50, 0.6); /* Lime Green Glow */
+            border-color: #32cd32;
         }
 
-        /* Secondary Actions (White with Blue Border) */
-        .quick-reply.secondary {
-            background: white;
-            border: 1px solid var(--primary-blue);
-            color: var(--primary-blue);
-        }
-
-        /* Exit/Neutral Actions */
-        .quick-reply.neutral {
-            background: #edf2f7;
-            color: var(--text-light);
-            border: 1px solid #e2e8f0;
-        }
-
-        .quick-reply:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-        }
-
-        /* Input Field Wrapper */
+        /* UPDATED: Input Field Wrapper with Fixed Shrinking */
         .input-wrapper {
             display: flex;
             align-items: center;
@@ -423,6 +368,9 @@
             border-radius: 30px;
             padding: 5px 5px 5px 20px;
             transition: border-color 0.2s;
+            width: 100%;
+            box-sizing: border-box;
+            min-height: 54px; /* Fix A: Prevents collapse */
         }
 
         .input-wrapper:focus-within {
@@ -435,17 +383,19 @@
             flex: 1;
             border: none;
             background: transparent;
-            font-size: 0.95rem;
-            padding: 8px 0;
+            font-size: 1rem;
+            padding: 10px 0;
             outline: none;
             resize: none;
-            max-height: 100px;
+            max-height: 120px;
             font-family: inherit;
+            width: 100%;
+            min-height: 34px; /* Fix A: Ensures minimum size for text */
         }
 
         .send-btn {
-            width: 40px;
-            height: 40px;
+            width: 44px;
+            height: 44px;
             border-radius: 50%;
             background: var(--primary-blue);
             color: white;
@@ -453,141 +403,51 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            cursor: pointer; /* JS will handle custom cursor hover */
+            cursor: pointer;
             transition: transform 0.2s, background 0.2s;
+            flex-shrink: 0;
         }
 
-        .send-btn:hover {
-            background: var(--primary-blue-dark);
-            transform: scale(1.05);
+        .send-btn:hover { 
+            background: var(--primary-blue-dark); 
+            transform: scale(1.05); 
+            box-shadow: 0 0 10px rgba(50, 205, 50, 0.6); /* Lime Green Glow */
         }
-        
-        .send-btn:disabled {
-            background: #cbd5e0;
-            cursor: not-allowed;
-        }
+        .send-btn:disabled { background: #cbd5e0; cursor: not-allowed; }
 
-        /* * FORMS & UTILITIES 
-         */
-        .message-form {
-            padding: 20px;
-            overflow-y: auto;
-            background: #fff;
-        }
-        
+        /* * FORMS & UTILITIES */
+        .message-form { padding: 20px; overflow-y: auto; background: #fff; width: 100%; max-width: 900px; margin: 0 auto; }
         .form-group { margin-bottom: 15px; }
+        .form-label { display: block; margin-bottom: 6px; font-size: 0.85rem; font-weight: 600; color: var(--text-dark); }
+        .form-input { width: 100%; padding: 12px; border: 1px solid #e2e8f0; border-radius: 8px; font-size: 0.95rem; font-family: inherit; transition: border 0.2s; }
+        .form-input:focus { border-color: var(--primary-blue); outline: none; }
         
-        .form-label {
-            display: block;
-            margin-bottom: 6px;
-            font-size: 0.85rem;
-            font-weight: 600;
-            color: var(--text-dark);
-        }
-        
-        .form-input {
-            width: 100%;
-            padding: 12px;
-            border: 1px solid #e2e8f0;
-            border-radius: 8px;
-            font-size: 0.95rem;
-            font-family: inherit;
-            transition: border 0.2s;
-        }
-        
-        .form-input:focus {
-            border-color: var(--primary-blue);
-            outline: none;
-        }
-
-        .btn-block {
-            width: 100%;
-            padding: 12px;
-            border-radius: 8px;
-            font-weight: 600;
-            cursor: pointer; /* JS will handle custom cursor hover */
-            border: none;
-            transition: transform 0.1s;
-        }
-
-        .btn-primary {
-            background: linear-gradient(135deg, var(--primary-blue), var(--primary-blue-dark));
-            color: white;
-        }
-
-        .btn-secondary {
-            background: #f7fafc;
-            color: var(--primary-blue);
-            border: 1px solid #cbd5e0;
-        }
+        .btn-block { width: 100%; padding: 12px; border-radius: 8px; font-weight: 600; cursor: pointer; border: none; transition: transform 0.1s; }
+        .btn-primary { background: linear-gradient(135deg, var(--primary-blue), var(--primary-blue-dark)); color: white; }
 
         /* Typing Indicator */
         .typing-indicator {
-            padding: 15px;
-            background: #f1f5f9;
-            border-radius: 18px;
-            border-bottom-left-radius: 4px;
-            width: fit-content;
-            margin-bottom: 15px;
-            display: none; /* toggled via JS */
+            padding: 15px; background: #f1f5f9; border-radius: 18px; border-bottom-left-radius: 4px;
+            width: fit-content; margin-bottom: 15px; display: none;
         }
         .dots { display: flex; gap: 4px; }
-        .dot {
-            width: 8px; height: 8px; background: #cbd5e0; border-radius: 50%;
-            animation: bounce 1.4s infinite ease-in-out both;
-        }
+        .dot { width: 8px; height: 8px; background: #cbd5e0; border-radius: 50%; animation: bounce 1.4s infinite ease-in-out both; }
         .dot:nth-child(1) { animation-delay: -0.32s; }
         .dot:nth-child(2) { animation-delay: -0.16s; }
 
         /* Resume Embed */
-        .resume-frame {
-            width: 100%;
-            height: 350px;
-            border: 1px solid #e2e8f0;
-            border-radius: 8px;
-            margin-top: 10px;
-            background: #f8f9fa;
-        }
+        .resume-frame { width: 100%; height: 600px; border: 1px solid #e2e8f0; border-radius: 8px; margin-top: 10px; background: #f8f9fa; }
 
         /* Utility Classes */
         .hidden { display: none !important; }
         .fade-in { animation: fadeInUp 0.4s ease-out; }
 
-        /* * MOBILE RESPONSIVENESS
-         */
+        /* Mobile Responsiveness */
         @media (max-width: 768px) {
-            body {
-                padding: 0;
-                background: var(--bg-gradient-top); /* Flat color usually better on mobile */
-            }
-            
-            .chat-container {
-                height: 100vh;
-                max-height: 100vh;
-                max-width: 100%;
-                border-radius: 0;
-                box-shadow: none;
-            }
-
-            /* Stack buttons vertically on mobile as requested */
-            .quick-replies {
-                grid-template-columns: 1fr; 
-                gap: 8px;
-            }
-
-            .quick-reply {
-                padding: 14px; /* Larger touch target */
-                font-size: 1rem;
-            }
-
-            .chat-header {
-                padding: 15px;
-            }
-            
-            .profile-container {
-                width: 70px;
-                height: 70px;
-            }
+            .quick-replies { grid-template-columns: 1fr; gap: 8px; }
+            .quick-reply { padding: 14px; font-size: 1rem; }
+            .message { max-width: 90%; }
+            .chat-messages { padding: 15px; }
         }
 
         /* Keyframes */
@@ -595,6 +455,32 @@
         @keyframes messageSlide { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         @keyframes bounce { 0%, 80%, 100% { transform: scale(0); } 40% { transform: scale(1); } }
 
+        /* UPDATED: Gold Pulse Keyframes */
+        @keyframes goldPulse {
+            0% {
+                box-shadow: 0 0 5px rgba(255, 215, 0, 0.3);
+                border-color: #dbb904; /* Darker gold */
+                transform: scale(1);
+            }
+            50% {
+                box-shadow: 0 0 25px rgba(255, 215, 0, 0.8); /* Strong glow */
+                border-color: #ffe34d; /* Brighter gold */
+                transform: scale(1.02);
+            }
+            100% {
+                box-shadow: 0 0 5px rgba(255, 215, 0, 0.3);
+                border-color: #dbb904;
+                transform: scale(1);
+            }
+        }
+
+        .profile-container:hover {
+            transform: scale(1.08);
+            transition: transform 0.3s ease;
+            animation: none; /* Pause pulsing on hover */
+            box-shadow: 0 0 30px rgba(255, 215, 0, 0.9);
+            border-color: #ffe34d;
+        }
     </style>
 </head>
 <body>
@@ -614,10 +500,10 @@
         </button>
     </div>
 
-    <!-- Main Chat Application -->
+    <!-- Main Chat Application (Full Screen) -->
     <div class="chat-container" id="chatContainer">
         
-        <!-- Header with Looping Avatar -->
+        <!-- Header -->
         <div class="chat-header">
             <div class="profile-container">
                 <div class="profile-media">
@@ -629,13 +515,14 @@
                         poster="https://i.imgur.com/ThRrtS2.jpeg"
                         onerror="this.style.display='none'; document.getElementById('avatarFallback').style.display='block';">
                     </video>
-                    <!-- Fallback shows only if video fails -->
                     <img id="avatarFallback" src="https://i.imgur.com/ThRrtS2.jpeg" alt="Roger Gomes" 
                          style="display: none; width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">
                 </div>
             </div>
-            <div class="chat-title">Roger's AI Assistant</div>
-            <div class="chat-subtitle"></div>
+            <div class="header-text">
+                <div class="chat-title">Roger's AI Assistant</div>
+                <div class="chat-subtitle">Enterprise Connect</div>
+            </div>
         </div>
 
         <!-- Chat History Area -->
@@ -643,22 +530,26 @@
             <!-- Messages injected via JS -->
         </div>
 
-        <!-- Typing Indicator (Hidden by default) -->
-        <div class="typing-indicator" id="typingIndicator">
-            <div class="dots"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>
+        <!-- Typing Indicator -->
+        <div style="max-width: 900px; width: 100%; margin: 0 auto; padding: 0 20px;">
+            <div class="typing-indicator" id="typingIndicator">
+                <div class="dots"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>
+            </div>
         </div>
 
-        <!-- Quick Replies & Input Area -->
+        <!-- Input Area & Quick Replies -->
         <div class="chat-input-container" id="inputArea">
-            <!-- Grid Buttons -->
-            <div class="quick-replies hidden" id="quickReplies"></div>
-            
-            <!-- Text Input -->
-            <div class="input-wrapper">
-                <textarea id="chatInput" class="chat-input" rows="1" placeholder="Type a message..."></textarea>
-                <button id="sendBtn" class="send-btn">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
-                </button>
+            <div class="input-width-constraint">
+                <!-- Grid Buttons -->
+                <div class="quick-replies hidden" id="quickReplies"></div>
+                
+                <!-- Text Input -->
+                <div class="input-wrapper">
+                    <textarea id="chatInput" class="chat-input" rows="1" placeholder="Type a message..."></textarea>
+                    <button id="sendBtn" class="send-btn">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+                    </button>
+                </div>
             </div>
         </div>
 
@@ -680,9 +571,7 @@
                 <label class="form-label" id="lbl_msg">Message</label>
                 <textarea class="form-input" id="f_message" rows="4"></textarea>
             </div>
-            
-            <div style="display: flex; gap: 10px;">
-                <button class="btn-block btn-secondary" id="btn_draft" onclick="app.generateDraft()">✨ AI Draft</button>
+            <div>
                 <button class="btn-block btn-primary" id="btn_send" onclick="app.submitForm()">Send Message</button>
             </div>
             <div id="formStatus" style="margin-top: 10px; text-align: center; font-size: 0.85rem; color: green;"></div>
@@ -697,30 +586,41 @@
         </div>
         
         <!-- Creator Signature -->
-        <div style="text-align: center; padding: 10px; font-size: 0.75rem; color: #a0aec0;">
-            Built by <a href="https://www.linkedin.com/in/meetrogergomes" target="_blank" style="color: #4299e1; text-decoration: none;">Roger Gomes</a> • v14.0
+        <div style="text-align: center; padding: 10px; font-size: 0.75rem; color: #a0aec0; background: white;">
+            Built by <a href="https://www.linkedin.com/in/meetrogergomes" target="_blank" style="color: #4299e1; text-decoration: none;">Roger Gomes</a> • v21.1
         </div>
 
     </div>
 
-    <!-- 
-      APPLICATION LOGIC 
-      Refactored for readability and maintenance.
-      Some sections could be optimized further but keeping it simple for now.
-    -->
+    <!-- APPLICATION LOGIC -->
     <script>
-        // TODO: Consider adding session persistence for returning users
-        // Maybe localStorage for draft messages? Low priority for v2.0
+        const GOOGLE_APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbw5Bzae7b5FXEYF_XKVO3udqZADIx3ez35p3TTsdxPnRfSdBwb8weQgbPm-kEegHihdTw/exec';
         
-        const GOOGLE_APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbygjlQiVtSYYoQtYOgXl2ES0iauRUsgsakygUYlbC1T1mzeeG54UnT0WD3dO6p2h9zDSg/exec';
-        
-        // Centralized text resources
         const RESOURCES = {
             en: {
                 welcome: "Hello! I'm Roger's AI Assistant. I'm here to help you connect with Roger efficiently.",
                 menuPrompt: "How can I help you today?",
-                // Updated Kapture App text
-                summary: "◎ Strategic GTM leader with 20+ years in B2B, SaaS, AI, and startup growth across APAC & North America.\n\n◎ Led $295M+ total portfolio spanning retail operations and enterprise deals, managing 1000+ employees.\n\n◎ Currently building KAPTURE APP, an AI recruitment platform reducing hiring time by 85%. Learn more at kaptureapp.io",
+                
+                summary: `
+<strong style="font-size: 1.1em; color: #2d3748;">Professional Overview</strong><br><br>
+◎ Strategic GTM leader with 20+ years in B2B, SaaS, AI, and startup growth across APAC & North America.<br><br>
+◎ Led $295M+ total portfolio spanning retail operations and enterprise deals.<br><br>
+◎ Currently building <a href="https://kaptureapp.io" target="_blank" style="color: #4299e1; text-decoration: none;">KAPTURE APP</a>, an AI recruitment platform reducing hiring time by 85%.<br><br>
+<strong style="color: #4299e1;">What I'm Looking For</strong><br>
+<strong>Primary Focus:</strong> Executive operating roles at Series A-C B2B SaaS or AI startups scaling globally. I want to partner with founding teams, taking ownership of GTM strategy, revenue operations, and building scalable systems from the ground up.<br><br>
+<strong>Also Open To:</strong> Strategic consulting or fractional leadership engagements (6-12 month mandates) for companies navigating:<br>
+- Digital transformation and operational excellence initiatives<br>
+- RevOps framework design and CRM/automation stack implementation<br>
+- Cross-regional expansion (particularly Global → APAC expansion, or Japan → Global market entry)<br>
+- 0→1 product launches requiring interim operational leadership<br><br>
+<strong>Motivated by:</strong> High-impact challenges, operational autonomy, meaningful equity participation, and collaborative founding teams that value execution speed over consensus-building.<br><br>
+<strong style="color: #4299e1;">Core Strengths</strong><br>
+◈ <em>Systems Thinker:</em> I build scalable frameworks that turn chaos into predictable growth.<br>
+◈ <em>Execution Speed:</em> From custom AI assistants to $80M international initiatives, I turn strategy into reality fast.<br>
+◈ <em>Data-Driven Pragmatist:</em> CRM adoption +30%, NPS +15%, churn -17%.<br><br>
+<em style="color: #718096;">Want to explore how I can accelerate your company's growth? Let's schedule a conversation.</em>
+                `,
+                
                 schedule: "Excellent choice. I've opened Roger's calendar. Please pick a time that works for you.",
                 resume: "Here is Roger's current resume.",
                 linkedin: "You can connect with Roger directly on LinkedIn here: <a href='https://www.linkedin.com/in/meetrogergomes' target='_blank' style='color: #3182ce;'>linkedin.com/in/meetrogergomes</a>",
@@ -729,17 +629,72 @@
                 error: "Something went wrong. Please try again.",
                 ui: {
                     title: "Roger's AI Assistant",
-                    subtitle: "",
+                    subtitle: "Enterprise Connect",
                     placeholder: "Type your message...",
                     buttons: ["Schedule a chat", "Leave a message", "Professional Summary", "View Resume", "Connect on LinkedIn", "Exit"],
-                    form: { name: "Your Name", company: "Company", email: "Email", msg: "Message", send: "Send Message", draft: "Draft Message" }
+                    form: { name: "Your Name", company: "Company", email: "Email", msg: "Message", send: "Send Message" }
+                },
+                
+                // --- DEEP DIVE RESOURCES (ENGLISH) ---
+                industryDisclaimer: "Quick note: I specialize in B2B SaaS and tech startups (Seed to Series C). My playbooks are built for scaling tech operations. If that's not your world, this might not be the best fit.",
+                
+                deepDiveIntro: "I'd love to create a custom 90-day playbook for your top operational bottlenecks. Here's how this works:\n\n☑ I personally craft every playbook (no AI templates)\n☑ Timeline: 48-72 hours via email\n☑ Focus: Your top 3 bottlenecks (we'll prioritize together)\n☑ What you get: Strategic roadmap + implementation framework\n\n⚠️ Important: This will be directional guidance on your bottlenecks—not a complete playbook. If I gave away full implementation plans for free, why would anyone hire me, right? Think of this as a strategic consultation preview.\n\nThis isn't instant AI—it's strategic thinking. Worth the wait?\n\nMind if I ask 3-5 follow-up questions to understand your context?",
+                
+                deepDiveAccept: "Great! Let's start with a few questions. This should take about 3 minutes.",
+                deepDiveSkip: "No problem! I'll work with what you've shared so far.",
+                priorityRankingQuestion: "Last question: If you had to rank your operational issues by urgency, which ONE is costing you the most right now—in terms of revenue, time, or team morale?",
+                priorityPlaceholder: 'Example: "Conversion—we\'re losing deals we should be winning"',
+                diagnosticComplete: "Perfect! I now have a complete picture of your situation. I'll personally analyze this and craft a detailed playbook covering:\n\n• Week 1-2: Diagnostic\n• Week 3-6: Quick Wins\n• Week 7-12: Strategic Initiatives\n\nI'll email this to you within 48-72 hours. What's your email address?",
+                diagnosticConfirm: "Got it! I'll send your custom playbook to {email} within 48-72 hours.",
+                acknowledgments: ['Got it.', 'Understood.', 'Makes sense.', "That's helpful context.", 'Interesting—thanks for sharing.'],
+                diagnosticQuestions: {
+                    'Operations': [
+                        { id: 'ops_1', q: "What's the #1 manual task your team wishes was automated?", type: 'freeText', placeholder: 'Example: "Copying data between our CRM and billing system"', followUps: { 'data entry': "Got it. Is this happening in your CRM, spreadsheets, or somewhere else?", 'reporting': "Makes sense. How long does it currently take to generate reports?", 'coordination': "Interesting. Which teams struggle most to stay aligned?", 'default': "Understood. What tools are you currently using for this?" } },
+                        { id: 'ops_2', q: "When things go wrong operationally, where's the breakdown usually happening?", type: 'options', options: ["Unclear ownership", "Tool limitations", "Communication gaps", "Process isn't documented"] },
+                        { id: 'ops_3', q: "If you could fix ONE operational issue tomorrow, what would have the biggest impact on your team's productivity?", type: 'freeText', placeholder: 'Example: "Eliminating our weekly manual reconciliation process"' }
+                    ],
+                    'Conversion': [
+                        { id: 'conv_1', q: "Where in your sales process do most leads drop off?", type: 'options', options: ["Initial call/demo", "Proposal/pricing stage", "Contract/legal", "They ghost after demo"] },
+                        { id: 'conv_2', q: "What's the most common objection your sales team hears?", type: 'freeText', placeholder: 'Example: "Too expensive compared to competitors"', followUps: { 'price': "Got it. How does your pricing actually compare to competitors?", 'timing': "Interesting. What's usually driving the 'not now' response—budget cycles? Other priorities?", 'value': "That's helpful. Do prospects clearly understand your ROI, or is that part of the problem?", 'default': "Understood. How is your team currently handling that objection?" } },
+                        { id: 'conv_3', q: "What does your best-converting sales rep do differently than everyone else?", type: 'freeText', placeholder: 'Example: "She sends custom ROI calculators before the demo"' }
+                    ],
+                    'Churn': [
+                        { id: 'churn_1', q: "At what point in the customer journey do most cancellations happen?", type: 'options', options: ["First 30 days (onboarding)", "90-180 days (post-launch)", "At renewal", "After a support issue"] },
+                        { id: 'churn_2', q: "When you ask churned customers why they left, what's the #1 reason they give?", type: 'freeText', placeholder: 'Example: "Didn\'t see enough value to justify the cost"', followUps: { 'didn\'t use': "That's common. Did they struggle with adoption, or did the use case just disappear?", 'expensive': "Interesting. Was this about budget cuts, or did they not see enough ROI?", 'competitor': "Got it. What did the competitor offer that you didn't?", 'default': "Understood. What do your happiest customers say when you ask why they stay?" } },
+                        { id: 'churn_3', q: "What's ONE thing your most successful customers all have in common?", type: 'freeText', placeholder: 'Example: "They have a dedicated champion who drives adoption"' }
+                    ],
+                    'Velocity': [
+                        { id: 'vel_1', q: "What typically causes deals to stall in your pipeline?", type: 'options', options: ["Waiting on legal/procurement", "Multiple stakeholders can't align", "Implementation concerns", "Budget approval delays"] },
+                        { id: 'vel_2', q: "How long does your average deal take from first contact to close?", type: 'freeText', placeholder: 'Example: "About 90 days, but we want it closer to 45"', followUps: { '3': "Got it. Is the delay on your end (sales process) or their end (buying process)?", '6': "Understood. Are there specific stages that consistently drag on?", '9': "Makes sense for enterprise. What would need to change to cut that time in half?", 'default': "Interesting. What would need to change to speed that up?" } },
+                        { id: 'vel_3', q: "If you could remove ONE friction point from your sales process, what would instantly speed things up?", type: 'freeText', placeholder: 'Example: "Getting technical validation done before legal review"' }
+                    ]
                 }
             },
             ja: {
                 welcome: "こんにちは！ロジャーのAIアシスタントです。ロジャーとの連絡をサポートします。",
                 menuPrompt: "本日はどのようなご用件でしょうか？",
-                // Updated Kapture App text
-                summary: "◎ 戦略的GTMリーダーとして、APAC・北米市場において20年以上の実績を持ち、総額295億円超のポートフォリオを牽引。\n\n◎ 現在、採用期間を85%短縮するAI採用プラットフォーム「KAPTURE APP」を開発中。詳細: kaptureapp.jp",
+                
+                // UPDATED: Japanese summary details
+                summary: `
+<strong style="font-size: 1.1em; color: #2d3748;">プロフェッショナルとしての概要</strong><br><br>
+◎ 戦略的GTMリーダーとして、APACおよび北米におけるB2B、SaaS、AI、スタートアップ成長領域で20年以上の経験を有し、グローバル展開と事業拡大を推進してきました。<br><br>
+◎ 小売運営からエンタープライズ案件まで総額2億9500万ドル以上のポートフォリオを統括。<br><br>
+◎ 現在、採用期間を85%短縮するAI採用プラットフォーム「<a href="https://kaptureapp.jp" target="_blank" style="color: #4299e1; text-decoration: none;">KAPTURE APP</a>」を開発中です。<br><br>
+<strong style="color: #4299e1;">求めている役割</strong><br>
+<strong>主な希望:</strong> グローバルに事業拡大を目指すシリーズA〜C段階のB2B SaaSまたはAIスタートアップにおける経営幹部職。創業チームとパートナーシップを組み、GTM戦略、レベニューオペレーション、スケーラブルなシステム構築を主導したいと考えています。<br><br>
+<strong>併せて検討可能:</strong> 以下の領域における戦略コンサルティングまたはフラクショナルリーダーシップ（6〜12ヶ月契約）:<br>
+- デジタルトランスフォーメーションおよびオペレーション改善イニシアティブ<br>
+- RevOpsフレームワーク設計およびCRM/自動化スタック実装<br>
+- クロスリージョナル展開（特にグローバル→APAC展開、または日本→グローバル市場参入）<br>
+- 0→1プロダクトローンチにおける暫定的オペレーションリーダーシップ<br><br>
+<strong>重視する要素:</strong> 高インパクトな課題、オペレーション上の裁量権、意義あるエクイティ参加、コンセンサス重視よりも実行スピードを優先する創業チームとの協働。<br><br>
+<strong style="color: #4299e1;">コア・ストレングス（強み）</strong><br>
+◈ <em>システム思考:</em> ワークフローの欠陥であれ市場機会であれ、他の人が見逃すパターンを見つけ出します。<br>
+◈ <em>実行スピード:</em> 議論よりも「出荷（実行）」を重視します。<br>
+◈ <em>データ主導の実利主義:</em> CRM導入率+30%、NPS+15%、解約率-17%。<br><br>
+<em style="color: #718096;">御社の成長をどのように加速できるか、一度お話ししませんか？</em>
+                `,
+                
                 schedule: "承知しました。ロジャーのカレンダーを開きます。ご都合の良い日時をお選びください。",
                 resume: "ロジャーの履歴書はこちらです。",
                 linkedin: "LinkedInでのご連絡はこちらから: <a href='https://www.linkedin.com/in/meetrogergomes' target='_blank' style='color: #3182ce;'>linkedin.com/in/meetrogergomes</a>",
@@ -748,102 +703,105 @@
                 error: "エラーが発生しました。もう一度お試しください。",
                 ui: {
                     title: "Roger's AIアシスタント",
-                    subtitle: "",
+                    subtitle: "Enterprise Connect",
                     placeholder: "メッセージを入力...",
-                    // Japanese button order customized
                     buttons: ["チャットを予約", "メッセージを残す", "職歴・スキル概要", "履歴書を見る", "職務経歴書を見る", "LinkedIn", "終了"],
-                    form: { name: "お名前", company: "会社名", email: "メールアドレス", msg: "メッセージ", send: "送信", draft: "下書き生成" }
+                    form: { name: "お名前", company: "会社名", email: "メールアドレス", msg: "メッセージ", send: "送信" }
+                },
+
+                industryDisclaimer: "注意事項: 私はB2B SaaSおよびテックスタートアップ(シードからシリーズC)を専門としています。",
+                
+                deepDiveIntro: "御社の主要なオペレーション課題に対するカスタム90日間プレイブックを作成させていただきます。プロセスは以下の通りです：\n\n☑ 私が各プレイブックを個別に作成(AIテンプレートなし)\n☑ タイムライン: 48~72時間以内にメール配信\n☑ 焦点: 御社の上位3つの課題(一緒に優先順位を決定)\n☑ 提供内容: 戦略的ロードマップ + 実装フレームワーク\n\n⚠️ 重要: これは完全なプレイブックではなく、課題に対する方向性のガイダンスです。無料で完全な実装計画を提供したら、誰も私を雇う必要がないですよね？これを戦略的コンサルテーションのプレビューとお考えください。\n\nこれは即座のAI出力ではなく、戦略的思考です。お待ちいただく価値があります。\n\n御社の状況を理解するために、3~5つほど追加質問をしてもよろしいでしょうか?",
+                
+                deepDiveAccept: "素晴らしい! いくつか質問させてください。3分ほどで終わります。",
+                deepDiveSkip: "承知しました。いただいた情報をもとに作成いたします。",
+                priorityRankingQuestion: "最後の質問です: オペレーション課題を緊急性でランク付けする場合、現在、収益、時間、またはチームの士気の点で最もコストがかかっているのはどれですか?",
+                priorityPlaceholder: '例:「コンバージョンー勝つべき案件を失っている」',
+                diagnosticComplete: "完璧です! 御社の状況を完全に把握しました。詳細なプレイブックを作成します:\n\n• 第1~2週: 診断\n• 第3~6週: クイックウィン\n• 第7~12週: 戦略的イニシアティブ\n\n48~72時間以内にメールでお送りします。メールアドレスを教えてください。",
+                diagnosticConfirm: "承知しました! 48~72時間以内に {email} 宛にカスタムプレイブックをお送りします。",
+                acknowledgments: ['承知しました。', '理解しました。', 'なるほど。', '参考になります。', 'ありがとうございます。'],
+                diagnosticQuestions: {
+                    'Operations': [
+                        { id: 'ops_1', q: "チームが最も自動化したいと考えている手作業は何ですか?", type: 'freeText', placeholder: '例:「CRMと請求システム間のデータコピー」', followUps: { 'data entry': "承知しました。これはCRM、スプレッドシート、その他のどこで発生していますか?", 'reporting': "なるほど。現在、レポート作成にどのくらい時間がかかっていますか?", 'coordination': "参考になります。どのチームが最も連携に苦労していますか?", 'default': "理解しました。現在、これに対してどのツールを使用していますか?" } },
+                        { id: 'ops_2', q: "オペレーション上の問題が発生する場合、通常どこで障害が起きていますか?", type: 'options', options: ["責任の不明確さ", "ツールの制限", "コミュニケーションギャップ", "プロセスが文書化されていない"] },
+                        { id: 'ops_3', q: "明日1つのオペレーション課題を解決できるとしたら、チームの生産性に最も大きな影響を与えるものは何ですか?", type: 'freeText', placeholder: '例:「週次の手動照合プロセスの排除」' }
+                    ],
+                    'Conversion': [
+                        { id: 'conv_1', q: "セールスプロセスのどの段階でリードが最も離脱しますか?", type: 'options', options: ["初回コール/デモ", "提案/価格設定段階", "契約/法務", "デモ後に連絡が途絶える"] },
+                        { id: 'conv_2', q: "営業チームが最もよく聞く異議は何ですか?", type: 'freeText', placeholder: '例:「競合と比較して高すぎる」', followUps: { 'price': "承知しました。実際の価格設定は競合とどのように比較されますか?", 'timing': "参考になります。通常、「今はタイミングではない」という回答の理由は何ですか? 予算サイクル? 他の優先事項?", 'value': "参考になります。見込み客は御社のROIを明確に理解していますか、それとも問題の一部ですか?", 'default': "理解しました。現在、チームはその異議にどのように対応していますか?" } },
+                        { id: 'conv_3', q: "最も成約率の高い営業担当者は、他の人と何が違いますか?", type: 'freeText', placeholder: '例:「彼女はデモの前にカスタムROI計算ツールを送信する」' }
+                    ],
+                    'Churn': [
+                        { id: 'churn_1', q: "顧客ジャーニーのどの時点でキャンセルが最も多く発生しますか?", type: 'options', options: ["最初の30日間(オンボーディング)", "90~180日(立ち上げ後)", "更新時", "サポート問題の後"] },
+                        { id: 'churn_2', q: "解約した顧客に理由を尋ねた際、最も多い回答は何ですか?", type: 'freeText', placeholder: '例:「コストを正当化するだけの価値を見出せなかった」', followUps: { 'didn\'t use': "よくあることです。導入に苦労したのか、それとも使用ケースが消滅したのですか?", 'expensive': "参考になります。これは予算削減の問題ですか、それとも十分なROIが見えなかったのですか?", 'competitor': "承知しました。競合が提供していて御社にはないものは何でしたか?", 'default': "理解しました。最も満足している顧客に残る理由を尋ねた場合、何と言いますか?" } },
+                        { id: 'churn_3', q: "最も成功している顧客に共通する1つの特徴は何ですか?", type: 'freeText', placeholder: '例:「導入を推進する専任のチャンピオンがいる」' }
+                    ],
+                    'Velocity': [
+                        { id: 'vel_1', q: "パイプラインで案件が停滞する典型的な理由は何ですか?", type: 'options', options: ["法務/調達待ち", "複数のステークホルダーの調整不足", "実装への懸念", "予算承認の遅延"] },
+                        { id: 'vel_2', q: "最初の接触からクローズまで、平均でどのくらいの期間がかかりますか?", type: 'freeText', placeholder: '例:「約90日ですが、45日に近づけたい」', followUps: { '3': "承知しました。遅延は御社側(営業プロセス)ですか、それとも顧客側(購買プロセス)ですか?", '6': "理解しました。一貫して長引く特定の段階はありますか?", '9': "エンタープライズとして理解できます。その期間を半分にするには何を変更する必要がありますか?", 'default': "参考になります。それを速めるには何を変更する必要がありますか?" } },
+                        { id: 'vel_3', q: "営業プロセスから1つの摩擦点を取り除けるとしたら、何が即座にスピードアップしますか?", type: 'freeText', placeholder: '例:「法務レビュー前に技術検証を完了する」' }
+                    ]
                 }
             }
         };
 
-        /**
-         * Dynamic Cursor Controller
-         * Handles the movement and states of the custom cursor.
-         */
         class CursorController {
             constructor() {
                 this.dot = document.getElementById('cursorDot');
                 this.outline = document.getElementById('cursorOutline');
                 this.mouseX = window.innerWidth / 2;
                 this.mouseY = window.innerHeight / 2;
-                
-                // Trail position (lagging behind)
                 this.outlineX = this.mouseX;
                 this.outlineY = this.mouseY;
 
-                // Only initialize on non-touch devices
                 if (window.matchMedia("(hover: hover) and (pointer: fine)").matches) {
                     this.init();
                 } else {
-                    // Hide custom elements on touch
                     if (this.dot) this.dot.style.display = 'none';
                     if (this.outline) this.outline.style.display = 'none';
                 }
             }
 
             init() {
-                // Track mouse position
                 document.addEventListener('mousemove', (e) => {
                     this.mouseX = e.clientX;
                     this.mouseY = e.clientY;
-                    
-                    // Move dot instantly for responsiveness
                     this.dot.style.transform = `translate(${this.mouseX}px, ${this.mouseY}px) translate(-50%, -50%)`;
-
-                    // Parallax background
-                    // Calculate slight movement based on mouse position from center
-                    const moveX = (e.clientX / window.innerWidth - 0.5) * 20;
-                    const moveY = (e.clientY / window.innerHeight - 0.5) * 20;
-                    document.body.style.backgroundPosition = `${50 + moveX}% ${50 + moveY}%`;
                 });
 
-                // Click Ripple Effect
                 document.addEventListener('mousedown', () => {
                     this.outline.classList.add('clicking');
                     setTimeout(() => this.outline.classList.remove('clicking'), 400);
                 });
 
-                // Animate outline with delay/smoothing
                 this.animate();
-
-                // Add hover effects to interactive elements
                 this.addHoverListeners();
             }
 
             animate() {
-                // Smooth interpolation factor (lower = slower/smoother lag)
                 const speed = 0.15;
-                
                 this.outlineX += (this.mouseX - this.outlineX) * speed;
                 this.outlineY += (this.mouseY - this.outlineY) * speed;
-                
                 this.outline.style.transform = `translate(${this.outlineX}px, ${this.outlineY}px) translate(-50%, -50%)`;
-                
                 requestAnimationFrame(() => this.animate());
             }
 
             addHoverListeners() {
-                // Select all interactive elements
                 const interactives = document.querySelectorAll('a, button, input, textarea, .quick-reply, .language-button, .star');
-                
                 interactives.forEach(el => {
                     el.addEventListener('mouseenter', () => document.body.classList.add('hovering'));
                     el.addEventListener('mouseleave', () => document.body.classList.remove('hovering'));
                 });
-
-                // Observer to attach listeners to new dynamic elements (like chat bubbles/buttons)
+                
                 const observer = new MutationObserver((mutations) => {
                     mutations.forEach((mutation) => {
                         if (mutation.addedNodes.length) {
                             mutation.addedNodes.forEach(node => {
-                                if (node.nodeType === 1) { // Element node
-                                    // Check if the node itself is interactive or contains interactives
+                                if (node.nodeType === 1) {
                                     const newInteractives = node.matches && node.matches('button, .quick-reply') ? [node] : [];
                                     if (node.querySelectorAll) {
                                         newInteractives.push(...node.querySelectorAll('button, .quick-reply, a'));
                                     }
-                                    
                                     newInteractives.forEach(el => {
                                         el.addEventListener('mouseenter', () => document.body.classList.add('hovering'));
                                         el.addEventListener('mouseleave', () => document.body.classList.remove('hovering'));
@@ -853,26 +811,19 @@
                         }
                     });
                 });
-
                 observer.observe(document.body, { childList: true, subtree: true });
             }
         }
 
-        /**
-         * Main Application Class
-         * Encapsulates logic to avoid global scope pollution.
-         */
         class AI_Assistant {
             constructor() {
                 this.lang = 'en';
-                this.state = 'init'; // init, chat, form, done
+                this.state = 'init';
+                this.diagnosticState = { stage: null, bottleneck: null, burn: null };
+                this.deepDiveState = { currentQuestionIndex: 0, answers: [], questionBank: null, inFollowUp: false };
                 
-                // Cache DOM
                 this.dom = {
-                    screens: {
-                        lang: document.getElementById('languageSelectionScreen'),
-                        chat: document.getElementById('chatContainer')
-                    },
+                    screens: { lang: document.getElementById('languageSelectionScreen'), chat: document.getElementById('chatContainer') },
                     messages: document.getElementById('chatMessages'),
                     inputArea: document.getElementById('inputArea'),
                     quickReplies: document.getElementById('quickReplies'),
@@ -885,29 +836,61 @@
                 };
 
                 this.bindEvents();
-                
-                // Init Cursor
                 this.cursor = new CursorController();
+            }
+
+            validateAnswer(answer, questionType, questionId) {
+                const lowerAnswer = answer.toLowerCase().trim();
+                const invalidPatterns = [
+                    /^f+u+c+k+$/i, 
+                    /^shit$/i, 
+                    /^[^a-z0-9\s]{3,}$/i, 
+                    /^(.)\1{4,}$/i, 
+                    /^(lol|haha|wtf|idk|nope|meh)$/i
+                ];
+                
+                for (let pattern of invalidPatterns) {
+                    if (pattern.test(lowerAnswer)) {
+                        return { valid: false, reason: 'inappropriate' };
+                    }
+                }
+                
+                if (questionType === 'freeText') {
+                    if (answer.length < 3) {
+                        return { valid: false, reason: 'too_short' };
+                    }
+                    if (questionId && (questionId.includes('ops_1') || questionId.includes('conv_2') || questionId.includes('priority'))) {
+                        if (answer.split(' ').length < 2) {
+                            return { valid: false, reason: 'too_vague' };
+                        }
+                    }
+                }
+                return { valid: true };
+            }
+
+            // ADDED: Helper to map Japanese bottleneck to English key
+            mapBottleneckToEnglish(localizedAnswer) {
+                const mapping = {
+                    'オペレーション': 'Operations',
+                    'コンバージョン': 'Conversion',
+                    'チャーン': 'Churn',
+                    'ベロシティ': 'Velocity'
+                };
+                return mapping[localizedAnswer] || localizedAnswer;
             }
 
             bindEvents() {
                 document.getElementById('sendBtn').onclick = () => this.handleUserInput();
-                
-                // Auto-resize textarea
                 this.dom.input.addEventListener('input', function() {
                     this.style.height = 'auto';
                     this.style.height = (this.scrollHeight) + 'px';
                 });
-
-                // Enter key to send
                 this.dom.input.addEventListener('keydown', (e) => {
                     if (e.key === 'Enter' && !e.shiftKey) {
                         e.preventDefault();
                         this.handleUserInput();
                     }
                 });
-
-                // Star rating logic
                 document.getElementById('stars').addEventListener('click', (e) => {
                     if (e.target.tagName === 'SPAN') {
                         const rating = e.target.getAttribute('data-val');
@@ -918,26 +901,20 @@
 
             setLanguage(selectedLang) {
                 this.lang = selectedLang;
-                
-                // Update Header UI
                 const txt = RESOURCES[this.lang].ui;
                 this.dom.title.textContent = txt.title;
                 this.dom.subtitle.textContent = txt.subtitle;
                 this.dom.input.placeholder = txt.placeholder;
 
-                // Update Form Labels
                 document.getElementById('lbl_name').textContent = txt.form.name;
                 document.getElementById('lbl_company').textContent = txt.form.company;
                 document.getElementById('lbl_email').textContent = txt.form.email;
                 document.getElementById('lbl_msg').textContent = txt.form.msg;
                 document.getElementById('btn_send').textContent = txt.form.send;
-                document.getElementById('btn_draft').textContent = txt.form.draft;
 
-                // Switch screens
                 this.dom.screens.lang.style.display = 'none';
                 this.dom.screens.chat.style.display = 'flex';
 
-                // Start Flow
                 this.startConversation();
             }
 
@@ -948,14 +925,18 @@
                 this.showMainMenu();
             }
 
-            // Renders the grid buttons based on current language
             showMainMenu() {
                 const btns = RESOURCES[this.lang].ui.buttons;
                 const container = this.dom.quickReplies;
                 container.innerHTML = '';
                 container.classList.remove('hidden');
+                
+                // Ensure main input is visible (restored after deep dive)
+                const mainInputWrapper = document.querySelector('.input-wrapper');
+                if (mainInputWrapper) {
+                    mainInputWrapper.style.display = 'flex';
+                }
 
-                // Helper to create styled buttons
                 const createBtn = (text, type, action) => {
                     const btn = document.createElement('div');
                     btn.className = `quick-reply ${type}`;
@@ -964,24 +945,23 @@
                     return btn;
                 };
 
-                // Logic to map button text to visual hierarchy
-                // Row 1: Primary Actions
-                container.appendChild(createBtn(btns[0], 'primary', 'schedule')); // Schedule
-                container.appendChild(createBtn(btns[1], 'primary', 'message'));  // Message
-
-                // Row 2: Secondary Info
-                container.appendChild(createBtn(btns[2], 'secondary', 'summary')); // Summary
-                container.appendChild(createBtn(btns[3], 'secondary', 'resume'));  // Resume
-
-                // Row 3: Connection (Handling Japanese extra button for detailed resume)
-                if (this.lang === 'ja') {
-                     container.appendChild(createBtn(btns[4], 'secondary', 'resume_detail')); // Shokumu Keirekisho
-                     container.appendChild(createBtn(btns[5], 'secondary', 'linkedin'));      // LinkedIn
-                     // Row 4
-                     container.appendChild(createBtn(btns[6], 'neutral', 'exit'));            // Exit
+                if (this.lang === 'en') {
+                    container.appendChild(createBtn('Get Custom Playbook', 'primary', 'diagnostic'));
+                    container.appendChild(createBtn(btns[0], 'primary', 'schedule'));
+                    container.appendChild(createBtn(btns[1], 'secondary', 'message'));
+                    container.appendChild(createBtn(btns[2], 'secondary', 'summary'));
+                    container.appendChild(createBtn(btns[3], 'secondary', 'resume'));
+                    container.appendChild(createBtn(btns[4], 'secondary', 'linkedin'));
+                    container.appendChild(createBtn(btns[5], 'neutral', 'exit'));
                 } else {
-                    container.appendChild(createBtn(btns[4], 'secondary', 'linkedin')); // LinkedIn
-                    container.appendChild(createBtn(btns[5], 'neutral', 'exit'));       // Exit
+                    container.appendChild(createBtn('カスタムプレイブック取得', 'primary', 'diagnostic'));
+                    container.appendChild(createBtn(btns[0], 'primary', 'schedule'));
+                    container.appendChild(createBtn(btns[1], 'secondary', 'message'));
+                    container.appendChild(createBtn(btns[2], 'secondary', 'summary'));
+                    container.appendChild(createBtn(btns[3], 'secondary', 'resume'));
+                    container.appendChild(createBtn(btns[4], 'secondary', 'resume_detail'));
+                    container.appendChild(createBtn(btns[5], 'secondary', 'linkedin'));
+                    container.appendChild(createBtn(btns[6], 'neutral', 'exit'));
                 }
             }
 
@@ -997,10 +977,9 @@
                 
                 this.addMessage(txt, 'user');
                 this.dom.input.value = '';
-                this.dom.input.style.height = 'auto'; // Reset height
+                this.dom.input.style.height = 'auto';
                 this.dom.quickReplies.classList.add('hidden');
                 
-                // Basic keyword matching for free-text inputs
                 const lower = txt.toLowerCase();
                 let action = 'default';
                 
@@ -1015,73 +994,476 @@
             }
 
             async processIntent(action) {
-                await this.sleep(500); // small thinking delay
+                await this.sleep(500);
 
                 switch(action) {
+                    case 'diagnostic':
+                        if (!this.diagnosticState.stage) {
+                            await this.botType(this.lang === 'en' ? "Let me ask a few quick questions first to understand your context..." : "まず、御社の状況を理解するためにいくつか質問させてください...");
+                            await this.sleep(800);
+                            await this.askStage(); 
+                        } else {
+                            await this.startDeepDive();
+                        }
+                        break;
                     case 'schedule':
                         await this.botType(RESOURCES[this.lang].schedule);
                         window.open('https://calendly.com/gomes-roger333', '_blank');
                         this.showMainMenu(); 
                         break;
-
                     case 'message':
                         await this.botType(RESOURCES[this.lang].formIntro);
                         this.dom.inputArea.classList.add('hidden');
                         this.dom.form.classList.remove('hidden');
                         break;
-
                     case 'summary':
-                        // Formats the text with line breaks
                         const summaryText = RESOURCES[this.lang].summary.replace(/\n/g, '<br>');
                         await this.botType(summaryText);
                         this.showMainMenu();
                         break;
-
                     case 'resume':
                         await this.botType(RESOURCES[this.lang].resume);
                         const resumeUrl = this.lang === 'ja' 
-                            ? 'https://drive.google.com/file/d/1xCcKF-MIK3BRbHdWX_j7B6u1qjJ_osrX/preview' 
-                            : 'https://drive.google.com/file/d/1dotyuwYDQ2fdn9JzmKlQPvWDYbElngWB/preview';
+                            ? 'https://drive.google.com/file/d/1rb7o6Gs4BgQJ0vEUbN_6OPDkFQDudPlt/preview' 
+                            : 'https://drive.google.com/file/d/1d4z2sMqIKkInP9fPuvPUbeFY1XCUqesz/preview';
                         this.embedIframe(resumeUrl);
                         this.showMainMenu();
                         break;
-                    
-                    case 'resume_detail': // Japanese Shokumu Keirekisho
+                    case 'resume_detail':
                         await this.botType("承知いたしました。ロジャーの職務経歴書です。");
-                        this.embedIframe('https://drive.google.com/file/d/1jRdu6uPBrGKT0ctRrdmGWLW_-QI52fJj/preview');
+                        this.embedIframe('https://drive.google.com/file/d/1dkjjuXHjNmNrQ9dJWYCe15CwTgLQ8CNE/preview');
                         this.showMainMenu();
                         break;
-
                     case 'linkedin':
                         await this.botType(RESOURCES[this.lang].linkedin);
                         this.showMainMenu();
                         break;
-
                     case 'exit':
                         this.dom.inputArea.classList.add('hidden');
                         this.dom.quickReplies.classList.add('hidden');
                         this.dom.rating.classList.remove('hidden');
                         break;
-
                     default:
                         await this.botType(this.lang === 'en' ? "I'm not sure I understand. Could you pick an option?" : "申し訳ありません、理解できませんでした。オプションから選んでいただけますか？");
                         this.showMainMenu();
                 }
             }
 
-            // --- Helper Methods ---
+            async askStage() {
+                const question = this.lang === 'en' ? "What stage is your company currently in?" : "現在の会社のステージはどこですか？";
+                await this.botType(question);
+                this.showQuickReplies(
+                    this.lang === 'en' 
+                    ? ['Seed', 'Series A', 'Series B', 'Series C', 'Bootstrap/Other'] 
+                    : ['シード', 'シリーズA', 'シリーズB', 'シリーズC', 'ブートストラップ/その他']
+                , 'stage');
+            }
+
+            // UPDATED: FIXED BUG #3 - Added Japanese translations
+            async askBottleneck() {
+                const question = this.lang === 'en' 
+                    ? "What is your primary growth bottleneck right now?" 
+                    : "現在、成長の主なボトルネックは何ですか？";
+                
+                await this.botType(question);
+                
+                this.showQuickReplies(
+                    this.lang === 'en' 
+                    ? ['Operations', 'Conversion', 'Churn', 'Velocity'] 
+                    : ['オペレーション', 'コンバージョン', 'チャーン', 'ベロシティ']
+                , 'bottleneck');
+            }
+
+            async askBurn() {
+                const question = this.lang === 'en' ? "What is your approximate monthly burn rate?" : "おおよその月次バーンレートはどのくらいですか？";
+                await this.botType(question);
+                this.showQuickReplies(
+                    this.lang === 'en' 
+                    ? ['<$50k', '$50k-$200k', '$200k+'] 
+                    : ['5万ドル未満', '5万〜20万ドル', '20万ドル以上']
+                , 'burn');
+            }
+
+            showQuickReplies(options, context) {
+                const container = this.dom.quickReplies;
+                container.innerHTML = '';
+                options.forEach(option => {
+                    const btn = document.createElement('div');
+                    btn.className = 'quick-reply secondary';
+                    btn.textContent = option;
+                    btn.onclick = () => this.handleDiagnosticAnswer(option, context);
+                    container.appendChild(btn);
+                });
+                container.classList.remove('hidden');
+            }
+
+            // UPDATED: Added mapping for localized answers
+            async handleDiagnosticAnswer(answer, context) {
+                this.addMessage(answer, 'user');
+                this.dom.quickReplies.classList.add('hidden');
+                
+                if (context === 'stage') {
+                    this.diagnosticState.stage = answer;
+                    await this.sleep(500);
+                    await this.askBottleneck();
+                } else if (context === 'bottleneck') {
+                    // Map Japanese answer to English key
+                    this.diagnosticState.bottleneck = this.mapBottleneckToEnglish(answer);
+                    await this.sleep(500);
+                    await this.askBurn();
+                } else if (context === 'burn') {
+                    this.diagnosticState.burn = answer;
+                    await this.generatePlaybook();
+                }
+            }
+
+            async generatePlaybook() {
+                await this.botType(RESOURCES[this.lang].industryDisclaimer);
+                await this.sleep(1200);
+                await this.startDeepDive();
+            }
+
+            async startDeepDive() {
+                const intro = RESOURCES[this.lang].deepDiveIntro.replace(/\n/g, '<br>');
+                await this.botType(intro);
+                await this.sleep(1000);
+
+                const container = this.dom.quickReplies;
+                container.innerHTML = '';
+                const options = this.lang === 'en' ? ['Yes, let\'s dig deeper', 'Skip to playbook'] : ['はい、詳しく聞いてください', 'プレイブック作成へ進む'];
+
+                options.forEach(option => {
+                    const btn = document.createElement('div');
+                    btn.className = 'quick-reply secondary';
+                    btn.textContent = option;
+                    btn.onclick = () => this.handleDeepDiveChoice(option);
+                    container.appendChild(btn);
+                });
+                container.classList.remove('hidden');
+            }
+
+            async handleDeepDiveChoice(choice) {
+                this.addMessage(choice, 'user');
+                this.dom.quickReplies.classList.add('hidden');
+
+                if (choice.includes('Skip') || choice.includes('進む')) {
+                    await this.botType(RESOURCES[this.lang].deepDiveSkip);
+                    await this.sleep(800);
+                    await this.completeDeepDive();
+                    return;
+                }
+
+                await this.botType(RESOURCES[this.lang].deepDiveAccept);
+                await this.sleep(800);
+
+                const bottleneckKey = this.diagnosticState.bottleneck; 
+                this.deepDiveState.questionBank = RESOURCES[this.lang].diagnosticQuestions[bottleneckKey];
+                
+                if (!this.deepDiveState.questionBank) {
+                    this.deepDiveState.questionBank = RESOURCES[this.lang].diagnosticQuestions['Operations'];
+                }
+
+                this.deepDiveState.currentQuestionIndex = 0;
+                this.deepDiveState.answers = [];
+                
+                await this.askDeepDiveQuestion();
+            }
+
+            async askDeepDiveQuestion() {
+                const currentQ = this.deepDiveState.questionBank[this.deepDiveState.currentQuestionIndex];
+
+                // FIX: Restore main input if it was hidden
+                const mainInputWrapper = document.querySelector('.input-wrapper');
+                if (mainInputWrapper && mainInputWrapper.style.display === 'none') {
+                    mainInputWrapper.style.display = 'flex';
+                }
+
+                if (!currentQ) {
+                    await this.askPriorityRanking();
+                    return;
+                }
+
+                const totalQuestions = this.deepDiveState.questionBank.length;
+                const currentNum = this.deepDiveState.currentQuestionIndex + 1;
+                const progress = this.lang === 'en' ? `[Question ${currentNum} of ${totalQuestions}]` : `[質問 ${currentNum}/${totalQuestions}]`;
+
+                await this.botType(`${progress}\n\n${currentQ.q}`);
+                await this.sleep(500);
+
+                if (currentQ.type === 'options') {
+                    this.showDeepDiveOptions(currentQ.options);
+                } else if (currentQ.type === 'freeText') {
+                    this.showFreeTextInput(currentQ.placeholder);
+                }
+            }
+
+            showDeepDiveOptions(options) {
+                const container = this.dom.quickReplies;
+                container.innerHTML = '';
+                options.forEach(option => {
+                    const btn = document.createElement('div');
+                    btn.className = 'quick-reply secondary';
+                    btn.textContent = option;
+                    btn.onclick = () => this.handleDeepDiveAnswer(option, 'option');
+                    container.appendChild(btn);
+                });
+                container.classList.remove('hidden');
+            }
+
+            // UPDATED: Fix Double Input Boxes
+            showFreeTextInput(placeholderText = null) {
+                const container = this.dom.quickReplies;
+                container.innerHTML = '';
+                
+                // ADD THIS: Hide the main input wrapper during deep dive questions
+                const mainInputWrapper = document.querySelector('.input-wrapper');
+                if (mainInputWrapper) {
+                    mainInputWrapper.style.display = 'none';
+                }
+                
+                const wrapper = document.createElement('div');
+                wrapper.style.cssText = 'display: flex; gap: 10px; width: 100%; align-items: flex-end;';
+                
+                const textarea = document.createElement('textarea');
+                textarea.id = 'deepDiveAnswer';
+                textarea.placeholder = placeholderText || (this.lang === 'en' ? 'Type your answer...' : 'ご回答を入力...');
+                textarea.className = 'form-input';
+                textarea.rows = 2;
+                textarea.style.cssText = 'flex: 1; padding: 12px; border-radius: 8px; border: 1px solid #e2e8f0; resize: vertical;';
+                
+                const btn = document.createElement('button');
+                btn.textContent = this.lang === 'en' ? 'Next' : '次へ';
+                btn.className = 'btn-block btn-primary';
+                btn.style.cssText = 'padding: 12px 24px; border-radius: 8px; white-space: nowrap; width: auto; height: fit-content;';
+                
+                btn.onclick = () => {
+                    const answer = textarea.value.trim();
+                    if (answer) {
+                        this.handleDeepDiveAnswer(answer, 'freeText');
+                    } else {
+                        alert(this.lang === 'en' ? 'Please enter an answer' : '回答を入力してください');
+                    }
+                };
+
+                wrapper.appendChild(textarea);
+                wrapper.appendChild(btn);
+                container.appendChild(wrapper);
+                container.classList.remove('hidden');
+                setTimeout(() => textarea.focus(), 100);
+            }
+
+            // UPDATED: Critical Fix for Validation Logic
+            async handleDeepDiveAnswer(answer, type) {
+                const currentQ = this.deepDiveState.currentQuestionIndex < this.deepDiveState.questionBank.length 
+                    ? this.deepDiveState.questionBank[this.deepDiveState.currentQuestionIndex]
+                    : this.deepDiveState.priorityQuestion;
+
+                // VALIDATE FIRST - BEFORE doing anything else
+                const validation = this.validateAnswer(answer, type, currentQ ? currentQ.id : null);
+                
+                if (!validation.valid) {
+                    // DON'T add user message
+                    // DON'T hide buttons
+                    let errorMsg;
+                    if (validation.reason === 'inappropriate') {
+                        errorMsg = this.lang === 'en' 
+                            ? "I appreciate your candor, but I need a thoughtful response to create a useful playbook. Let's try that again?" 
+                            : "率直なご意見はありがたいですが、有用なプレイブックを作成するには真剣な回答が必要です。もう一度お願いできますか？";
+                    } else if (validation.reason === 'too_short') {
+                        errorMsg = this.lang === 'en'
+                            ? "Could you elaborate a bit more? I need more context to give you meaningful recommendations."
+                            : "もう少し詳しく説明していただけますか？有意義な提案をするには、より多くの文脈が必要です。";
+                    } else { // too_vague
+                        errorMsg = this.lang === 'en'
+                            ? "I need a bit more detail here. For example, describe the specific situation or challenge you're facing."
+                            : "もう少し詳細が必要です。例えば、直面している具体的な状況や課題を説明してください。";
+                    }
+                    
+                    await this.botType(errorMsg);
+                    await this.sleep(800);
+                    
+                    // Re-show the SAME question input with context awareness
+                    if (type === 'freeText' || (currentQ && currentQ.type === 'freeText')) {
+                        // UX FIX: If in follow-up, don't show original placeholder
+                        const placeholder = this.deepDiveState.inFollowUp ? null : currentQ.placeholder;
+                        this.showFreeTextInput(placeholder);
+                    } else if (currentQ) {
+                        this.showDeepDiveOptions(currentQ.options);
+                    }
+                    return; // CRITICAL: Stop execution here completely
+                }
+
+                // ONLY proceed if validation passed
+                this.addMessage(answer, 'user');
+                this.dom.quickReplies.classList.add('hidden');
+
+                // Handle "I don't know" gracefully
+                if (type === 'freeText') {
+                    const lowerAnswer = answer.toLowerCase();
+                    if (lowerAnswer === 'idk' || lowerAnswer === 'not sure' || lowerAnswer === 'わからない' || lowerAnswer === 'skip') {
+                        await this.sleep(500);
+                        await this.botType(this.lang === 'en' ? "No worries! Let's move to the next question." : "問題ありません！次の質問に進みましょう。");
+                        this.deepDiveState.currentQuestionIndex++;
+                        await this.sleep(800);
+                        await this.askDeepDiveQuestion();
+                        return;
+                    }
+                }
+
+                // Store answer
+                this.deepDiveState.answers.push({
+                    questionId: currentQ.id,
+                    question: currentQ.q || currentQ.question,
+                    answer: answer,
+                    type: type
+                });
+
+                await this.sleep(500);
+
+                // Check if this was the priority question
+                if (currentQ.id === 'priority') {
+                    const acks = RESOURCES[this.lang].acknowledgments;
+                    await this.botType(acks[Math.floor(Math.random() * acks.length)]);
+                    await this.sleep(800);
+                    await this.completeDeepDive();
+                    return;
+                }
+
+                // CRITICAL FIX: Only check for follow-ups if NOT already in a follow-up
+                // AND if this is a valid freeText answer to the main question
+                if (currentQ.followUps && type === 'freeText' && !this.deepDiveState.inFollowUp) {
+                    const followUpText = this.findFollowUp(answer, currentQ.followUps);
+                    if (followUpText) {
+                        this.deepDiveState.inFollowUp = true;
+                        await this.botType(followUpText);
+                        await this.sleep(500);
+                        this.showFreeTextInput(); // No placeholder, it's a follow-up
+                        return; // Stop here, wait for follow-up answer
+                    }
+                }
+
+                // Reset follow-up flag
+                this.deepDiveState.inFollowUp = false;
+
+                // Random acknowledgment
+                const acks = RESOURCES[this.lang].acknowledgments;
+                await this.botType(acks[Math.floor(Math.random() * acks.length)]);
+                await this.sleep(800);
+
+                // Move to next question
+                this.deepDiveState.currentQuestionIndex++;
+                await this.askDeepDiveQuestion();
+            }
+
+            findFollowUp(answer, followUps) {
+                const lowerAnswer = answer.toLowerCase();
+                for (const [keyword, followUpText] of Object.entries(followUps)) {
+                    if (keyword !== 'default' && lowerAnswer.includes(keyword.toLowerCase())) {
+                        return followUpText;
+                    }
+                }
+                return followUps.default ? followUps.default : null;
+            }
+
+            async askPriorityRanking() {
+                this.deepDiveState.priorityQuestion = {
+                    id: 'priority',
+                    question: RESOURCES[this.lang].priorityRankingQuestion,
+                    q: RESOURCES[this.lang].priorityRankingQuestion
+                };
+                await this.botType(RESOURCES[this.lang].priorityRankingQuestion);
+                await this.sleep(500);
+                this.showFreeTextInput(RESOURCES[this.lang].priorityPlaceholder);
+            }
+
+            async completeDeepDive() {
+                await this.botType(RESOURCES[this.lang].diagnosticComplete);
+                await this.sleep(1000);
+                this.showEmailCapture();
+            }
+
+            showEmailCapture() {
+                const container = this.dom.quickReplies;
+                container.innerHTML = '';
+                
+                const wrapper = document.createElement('div');
+                wrapper.style.cssText = 'display: flex; gap: 10px; width: 100%; align-items: center;';
+                
+                const input = document.createElement('input');
+                input.type = 'email';
+                input.id = 'diagnosticEmail';
+                input.placeholder = this.lang === 'en' ? 'your@email.com' : 'メールアドレス';
+                input.className = 'form-input';
+                input.style.cssText = 'flex: 1; padding: 12px; border-radius: 8px; border: 1px solid #e2e8f0;';
+                
+                const btn = document.createElement('button');
+                btn.textContent = this.lang === 'en' ? 'Submit' : '送信';
+                btn.className = 'btn-block btn-primary';
+                btn.style.cssText = 'padding: 12px 24px; border-radius: 8px; white-space: nowrap; width: auto;';
+                btn.onclick = () => this.submitDiagnosticRequest();
+                
+                wrapper.appendChild(input);
+                wrapper.appendChild(btn);
+                container.appendChild(wrapper);
+                container.classList.remove('hidden');
+                setTimeout(() => input.focus(), 100);
+            }
+
+            async submitDiagnosticRequest() {
+                const emailInput = document.getElementById('diagnosticEmail');
+                const email = emailInput ? emailInput.value.trim() : '';
+                
+                if (!email || !email.includes('@')) {
+                    alert(this.lang === 'en' ? 'Please enter a valid email address' : '有効なメールアドレスを入力してください');
+                    return;
+                }
+
+                this.dom.quickReplies.classList.add('hidden');
+                await this.botType(this.lang === 'en' ? 'Submitting request...' : 'リクエストを送信中...');
+
+                try {
+                    const requestData = {
+                        type: 'diagnostic_playbook_request',
+                        email: email,
+                        timestamp: new Date().toISOString(),
+                        language: this.lang,
+                        diagnosticData: {
+                            stage: this.diagnosticState.stage,
+                            bottleneck: this.diagnosticState.bottleneck,
+                            burn: this.diagnosticState.burn
+                        },
+                        deepDiveAnswers: this.deepDiveState.answers,
+                        userAgent: navigator.userAgent,
+                        referrer: document.referrer || 'direct'
+                    };
+
+                    await fetch(GOOGLE_APPS_SCRIPT_URL, {
+                        method: 'POST',
+                        mode: 'no-cors',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(requestData)
+                    });
+
+                    const confirmMsg = RESOURCES[this.lang].diagnosticConfirm.replace('{email}', email);
+                    await this.botType(confirmMsg);
+                    await this.sleep(1000);
+                    this.showMainMenu();
+
+                } catch (error) {
+                    console.error('Diagnostic request failed:', error);
+                    await this.botType(this.lang === 'en' ? 'I encountered an issue submitting your request.' : 'リクエストの送信中にエラーが発生しました。');
+                    this.showMainMenu();
+                }
+            }
 
             addMessage(text, sender) {
                 const div = document.createElement('div');
                 div.className = `message ${sender}`;
                 div.innerHTML = text;
-                
-                // Time stamp
                 const time = document.createElement('span');
                 time.className = 'message-time';
                 time.innerText = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
                 div.appendChild(time);
-
                 this.dom.messages.appendChild(div);
                 this.scrollToBottom();
             }
@@ -1089,11 +1471,8 @@
             async botType(text) {
                 this.dom.typing.style.display = 'block';
                 this.scrollToBottom();
-                
-                // Simulate reading/typing time based on length
                 const delay = Math.min(Math.max(text.length * 15, 800), 2000);
                 await this.sleep(delay);
-
                 this.dom.typing.style.display = 'none';
                 this.addMessage(text, 'bot');
             }
@@ -1111,8 +1490,6 @@
             }
 
             sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
-
-            // --- Form Handling ---
 
             async submitForm() {
                 const btn = document.getElementById('btn_send');
@@ -1143,8 +1520,6 @@
                     
                     status.innerText = RESOURCES[this.lang].thanks;
                     await this.sleep(1500);
-                    
-                    // Hide form and go to rating
                     this.dom.form.classList.add('hidden');
                     this.dom.rating.classList.remove('hidden');
 
@@ -1153,47 +1528,6 @@
                     btn.innerText = "Error";
                     status.innerText = RESOURCES[this.lang].error;
                     btn.disabled = false;
-                }
-            }
-
-            async generateDraft() {
-                const msgInput = document.getElementById('f_message');
-                const intent = msgInput.value;
-                const btn = document.getElementById('btn_draft');
-
-                if (!intent) {
-                    alert("Please type a few keywords about what you want to say first.");
-                    return;
-                }
-
-                btn.disabled = true;
-                btn.innerText = "Generating...";
-
-                // Using the provided Gemini setup
-                try {
-                    const prompt = this.lang === 'en' 
-                        ? `Write a short, professional business message to Roger based on this intent: "${intent}". Keep it under 3 sentences.` 
-                        : `ロジャーへの短いビジネスメッセージを書いてください。意図：「${intent}」。3文以内で。`;
-                    
-                    // Note: For production, API key should be retrieved from a secure backend endpoint
-                    // This is a demo implementation for portfolio purposes
-                    const apiKey = ""; // Replace with your key for testing
-                    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
-                    });
-
-                    const result = await response.json();
-                    const text = result.candidates[0].content.parts[0].text;
-                    msgInput.value = text;
-
-                } catch (e) {
-                    console.error("Draft failed", e);
-                    msgInput.value += " (Draft generation failed)";
-                } finally {
-                    btn.disabled = false;
-                    btn.innerText = RESOURCES[this.lang].ui.form.draft;
                 }
             }
             
@@ -1208,7 +1542,6 @@
             }
         }
 
-        // Initialize App
         const app = new AI_Assistant();
 
     </script>
