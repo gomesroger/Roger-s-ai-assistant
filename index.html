@@ -1,9 +1,13 @@
 <!DOCTYPE html>
 <!-- 
     Roger's AI Assistant - Enterprise Edition
-    Version: 21.1 (Bug Fix)
+    Version: 21.2 (Security Update)
     
     Changelog:
+    - [Security] Added Honeypot field for bot detection.
+    - [Security] Implemented client-side rate limiting (3 req/10min).
+    - [Security] Added XSS protection via input sanitization.
+    - [Security] Added basic request signing (obfuscation).
     - [Fix] Fixed syntax error in askBurn() method (missing quote).
     - [UI] Retained Lime Green Glow effect on buttons.
     - [Content] Maintained all strategic content updates.
@@ -555,6 +559,11 @@
 
         <!-- Contact Form (Overlay style) -->
         <div class="message-form hidden" id="contactForm">
+            <!-- Honeypot Field for Bot Trapping -->
+            <div style="position: absolute; left: -5000px;" aria-hidden="true">
+                <input type="text" id="website" name="website" tabindex="-1" autocomplete="off">
+            </div>
+
             <div class="form-group">
                 <label class="form-label" id="lbl_name">Name</label>
                 <input type="text" class="form-input" id="f_name">
@@ -587,7 +596,7 @@
         
         <!-- Creator Signature -->
         <div style="text-align: center; padding: 10px; font-size: 0.75rem; color: #a0aec0; background: white;">
-            Built by <a href="https://www.linkedin.com/in/meetrogergomes" target="_blank" style="color: #4299e1; text-decoration: none;">Roger Gomes</a> • v21.1
+            Built by <a href="https://www.linkedin.com/in/meetrogergomes" target="_blank" style="color: #4299e1; text-decoration: none;">Roger Gomes</a> • v21.2
         </div>
 
     </div>
@@ -821,6 +830,9 @@
                 this.state = 'init';
                 this.diagnosticState = { stage: null, bottleneck: null, burn: null };
                 this.deepDiveState = { currentQuestionIndex: 0, answers: [], questionBank: null, inFollowUp: false };
+                
+                // Rate Limiting Cache (10 min window)
+                this.submissionCache = { count: 0, resetTime: Date.now() + 600000 };
                 
                 this.dom = {
                     screens: { lang: document.getElementById('languageSelectionScreen'), chat: document.getElementById('chatContainer') },
@@ -1422,6 +1434,9 @@
                 await this.botType(this.lang === 'en' ? 'Submitting request...' : 'リクエストを送信中...');
 
                 try {
+                    // ADDED: Generate token for diagnostic requests too
+                    const { token, timestamp } = this.generateRequestToken();
+
                     const requestData = {
                         type: 'diagnostic_playbook_request',
                         email: email,
@@ -1434,7 +1449,9 @@
                         },
                         deepDiveAnswers: this.deepDiveState.answers,
                         userAgent: navigator.userAgent,
-                        referrer: document.referrer || 'direct'
+                        referrer: document.referrer || 'direct',
+                        _token: token,      // ADDED
+                        _ts: timestamp      // ADDED
                     };
 
                     await fetch(GOOGLE_APPS_SCRIPT_URL, {
@@ -1456,10 +1473,25 @@
                 }
             }
 
+            // ADDED: Input Sanitization Helper
+            sanitizeHTML(text) {
+                const div = document.createElement('div');
+                div.textContent = text; // This escapes HTML automatically
+                return div.innerHTML;
+            }
+
+            // UPDATED: Use sanitizeHTML for user inputs
             addMessage(text, sender) {
                 const div = document.createElement('div');
                 div.className = `message ${sender}`;
-                div.innerHTML = text;
+                
+                // Only sanitize USER messages, not bot messages
+                if (sender === 'user') {
+                    div.textContent = text; // Safe - no HTML rendering
+                } else {
+                    div.innerHTML = text; // Bot messages can have formatted content
+                }
+                
                 const time = document.createElement('span');
                 time.className = 'message-time';
                 time.innerText = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
@@ -1491,16 +1523,52 @@
 
             sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
 
+            // ADDED: Request Signing Helper
+            generateRequestToken() {
+                const timestamp = Date.now();
+                const random = Math.random().toString(36).substring(7);
+                // Simple hash - not cryptographically secure, but better than nothing
+                const token = btoa(`${timestamp}-${random}-${navigator.userAgent.substring(0, 20)}`);
+                return { token, timestamp };
+            }
+
             async submitForm() {
                 const btn = document.getElementById('btn_send');
                 const status = document.getElementById('formStatus');
+
+                // ADDED: Rate limit check
+                if (Date.now() > this.submissionCache.resetTime) {
+                    this.submissionCache = { count: 0, resetTime: Date.now() + 600000 };
+                }
                 
+                if (this.submissionCache.count >= 3) {
+                    alert(this.lang === 'en' 
+                        ? 'Too many submissions. Please wait 10 minutes.' 
+                        : '送信回数が多すぎます。10分後に再試行してください。');
+                    return;
+                }
+
+                this.submissionCache.count++;
+                
+                // ADDED: Request Signing
+                const { token, timestamp } = this.generateRequestToken();
+
                 const data = {
                     name: document.getElementById('f_name').value,
                     company: document.getElementById('f_company').value,
                     email: document.getElementById('f_email').value,
-                    message: document.getElementById('f_message').value
+                    message: document.getElementById('f_message').value,
+                    website: document.getElementById('website').value, // ADDED: Honeypot field
+                    _token: token, // ADDED: Token
+                    _ts: timestamp  // ADDED: Timestamp
                 };
+
+                // ADDED: Client-side honeypot check
+                if (data.website) {
+                    console.log('Bot detected');
+                    status.innerText = RESOURCES[this.lang].thanks; // Fake success
+                    return; // Don't actually submit
+                }
 
                 if (!data.name || !data.email || !data.message) {
                     alert(this.lang === 'en' ? "Please fill in required fields." : "必須項目を入力してください。");
