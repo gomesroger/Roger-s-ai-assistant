@@ -1,16 +1,12 @@
 <!DOCTYPE html>
 <!-- 
     Roger's AI Assistant - Enterprise Edition
-    Version: 21.2 (Security Update)
+    Version: 21.4 (Link Correction)
     
     Changelog:
-    - [Security] Added Honeypot field for bot detection.
-    - [Security] Implemented client-side rate limiting (3 req/10min).
-    - [Security] Added XSS protection via input sanitization.
-    - [Security] Added basic request signing (obfuscation).
-    - [Fix] Fixed syntax error in askBurn() method (missing quote).
-    - [UI] Retained Lime Green Glow effect on buttons.
-    - [Content] Maintained all strategic content updates.
+    - [Fix] Corrected the Japanese "Resume" (履歴書) link to the specific version requested.
+    - [Content] "Shokumu Keireki" (職務経歴書) link remains unchanged.
+    - [Security] Retained all previous security features (Honeypot, Rate Limiting, Sanitization).
 -->
 <html lang="en">
 <head>
@@ -596,7 +592,7 @@
         
         <!-- Creator Signature -->
         <div style="text-align: center; padding: 10px; font-size: 0.75rem; color: #a0aec0; background: white;">
-            Built by <a href="https://www.linkedin.com/in/meetrogergomes" target="_blank" style="color: #4299e1; text-decoration: none;">Roger Gomes</a> • v21.2
+            Built by <a href="https://www.linkedin.com/in/meetrogergomes" target="_blank" style="color: #4299e1; text-decoration: none;">Roger Gomes</a> • v21.4
         </div>
 
     </div>
@@ -673,9 +669,9 @@
                         { id: 'churn_3', q: "What's ONE thing your most successful customers all have in common?", type: 'freeText', placeholder: 'Example: "They have a dedicated champion who drives adoption"' }
                     ],
                     'Velocity': [
-                        { id: 'vel_1', q: "What typically causes deals to stall in your pipeline?", type: 'options', options: ["Waiting on legal/procurement", "Multiple stakeholders can't align", "Implementation concerns", "Budget approval delays"] },
-                        { id: 'vel_2', q: "How long does your average deal take from first contact to close?", type: 'freeText', placeholder: 'Example: "About 90 days, but we want it closer to 45"', followUps: { '3': "Got it. Is the delay on your end (sales process) or their end (buying process)?", '6': "Understood. Are there specific stages that consistently drag on?", '9': "Makes sense for enterprise. What would need to change to cut that time in half?", 'default': "Interesting. What would need to change to speed that up?" } },
-                        { id: 'vel_3', q: "If you could remove ONE friction point from your sales process, what would instantly speed things up?", type: 'freeText', placeholder: 'Example: "Getting technical validation done before legal review"' }
+                        { id: 'vel_1', q: "What typically causes deals to stall in your pipeline?", type: 'options', options: ["法務/調達待ち", "複数のステークホルダーの調整不足", "実装への懸念", "予算承認の遅延"] },
+                        { id: 'vel_2', q: "最初の接触からクローズまで、平均でどのくらいの期間がかかりますか?", type: 'freeText', placeholder: '例:「約90日ですが、45日に近づけたい」', followUps: { '3': "承知しました。遅延は御社側(営業プロセス)ですか、それとも顧客側(購買プロセス)ですか?", '6': "理解しました。一貫して長引く特定の段階はありますか?", '9': "エンタープライズとして理解できます。その期間を半分にするには何を変更する必要がありますか?", 'default': "参考になります。それを速めるには何を変更する必要がありますか?" } },
+                        { id: 'vel_3', q: "営業プロセスから1つの摩擦点を取り除けるとしたら、何が即座にスピードアップしますか?", type: 'freeText', placeholder: '例:「法務レビュー前に技術検証を完了する」' }
                     ]
                 }
             },
@@ -1036,14 +1032,14 @@
                     case 'resume':
                         await this.botType(RESOURCES[this.lang].resume);
                         const resumeUrl = this.lang === 'ja' 
-                            ? 'https://drive.google.com/file/d/1ZQxxXMO03IffvgDRAFdNq0SJDiOXC_1i/preview' 
+                            ? 'https://drive.google.com/file/d/1dkjjuXHjNmNrQ9dJWYCe15CwTgLQ8CNE/preview' 
                             : 'https://drive.google.com/file/d/1d4z2sMqIKkInP9fPuvPUbeFY1XCUqesz/preview';
                         this.embedIframe(resumeUrl);
                         this.showMainMenu();
                         break;
                     case 'resume_detail':
                         await this.botType("承知いたしました。ロジャーの職務経歴書です。");
-                        this.embedIframe('https://drive.google.com/file/d/1dkjjuXHjNmNrQ9dJWYCe15CwTgLQ8CNE/preview');
+                        this.embedIframe('https://drive.google.com/file/d/1ZQxxXMO03IffvgDRAFdNq0SJDiOXC_1i/preview');
                         this.showMainMenu();
                         break;
                     case 'linkedin':
