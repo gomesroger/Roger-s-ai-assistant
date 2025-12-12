@@ -1032,9 +1032,17 @@
                     case 'resume':
                         await this.botType(RESOURCES[this.lang].resume);
                         const resumeUrl = this.lang === 'ja' 
-                            ? 'https://drive.google.com/file/d/1dkjjuXHjNmNrQ9dJWYCe15CwTgLQ8CNE/preview' 
-                            : 'https://drive.google.com/file/d/1d4z2sMqIKkInP9fPuvPUbeFY1XCUqesz/preview';
+                            // Updated: Japanese Resume / Shokumu Keireki (Link #2)
+                            ? 'https://drive.google.com/file/d/1iFvsfMgdqXnjrpugfVnyV8iysjNw-zJG/preview' 
+                            // Updated: English Resume (Link #1)
+                            : 'https://drive.google.com/file/d/1j88QF-g-sASNpYuwVVIZv0H81VfN1EVx/preview';
                         this.embedIframe(resumeUrl);
+                        this.showMainMenu();
+                        break;
+                    case 'resume_detail':
+                        await this.botType("承知いたしました。ロジャーの職務経歴書です。");
+                        // Updated: Japanese Shokumu Keirekisho (Link #3)
+                        this.embedIframe('https://drive.google.com/file/d/1azxPSOHcRYWICWJgYyqdyC_6rLmYSQO9/preview');
                         this.showMainMenu();
                         break;
                     case 'resume_detail':
